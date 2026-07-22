@@ -18,7 +18,7 @@ const getPublicIdFromUrl = (url: string) => {
     if (parts.length < 2) return null;
     const relativePath = parts[1].replace(/^v\d+\//, "");
     return relativePath.split(".")[0];
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         }
       }
 
-      settings = await Setting.findByIdAndUpdate(settings._id, body, { new: true });
+      settings = await Setting.findByIdAndUpdate(settings._id, body, { returnDocument: "after" });
     }
 
     return NextResponse.json(settings, { status: 200 });
