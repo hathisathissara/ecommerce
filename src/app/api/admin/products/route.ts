@@ -139,16 +139,19 @@ export async function DELETE(req: NextRequest) { // NextRequest ලෙස වෙ
 
     // Cloudinary Deletion එක වෙනම try-catch එකක ලියා සයිට් එක ක්‍රෑෂ් වීම වළක්වයි
     try {
-      for (const imageUrl of product.images) {
-        const publicId = getPublicIdFromUrl(imageUrl);
-        if (publicId) {
-          await cloudinary.uploader.destroy(publicId);
-        }
-      }
-    } catch (cloudinaryError) {
-      // Cloudinary සර්වර් එකේ මොනවා හරි අවුලක් වුණත් Database එකෙන් භාණ්ඩය සාර්ථකව මැකී යයි
-      console.error("Cloudinary Delete Error (Skipped to prevent crash):", cloudinaryError);
+  for (const imageUrl of product.images) {
+    const publicId = getPublicIdFromUrl(imageUrl);
+    console.log("Extracted publicId:", publicId, "from URL:", imageUrl);
+    if (publicId) {
+      const result = await cloudinary.uploader.destroy(publicId);
+      console.log("Cloudinary destroy result:", result); // { result: 'ok' } or { result: 'not found' }
+    } else {
+      console.warn("Could not extract publicId from:", imageUrl);
     }
+  }
+} catch (cloudinaryError) {
+  console.error("Cloudinary Delete Error:", cloudinaryError);
+}
 
     // Database එකෙන් මකා දැමීම
     await Product.findByIdAndDelete(productId);
