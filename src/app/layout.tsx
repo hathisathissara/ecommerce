@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "The Store | Luxury Perfumes & Cosmetics",
     description: "Explore our premium collection of imported luxury perfumes and cosmetics.",
-    url: "https://thestore.com", // පසුව ඔයාගේ සැබෑ Domain එක දාන්න
+    url: "https://lumosstore.vercel.app/", // පසුව ඔයාගේ සැබෑ Domain එක දාන්න
     siteName: "The Store",
     locale: "en_US",
     type: "website",
