@@ -1,4 +1,5 @@
 // src/app/(store)/page.tsx
+import type { Metadata } from "next";
 import connectDB from "@/lib/db";
 import Category from "@/models/Category";
 import Product from "@/models/Product";
@@ -10,6 +11,36 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const revalidate = 10;
+
+// WhatsApp/FB crawler එකට public/ folder static image එකක් නෙමෙයි,
+// ඔයාගේ API/DB එකෙන් එන real banner/product image එක OG image විදිහට දෙනවා
+export async function generateMetadata(): Promise<Metadata> {
+  await connectDB();
+
+  // 1st priority: active banner එකක image, 2nd priority: latest product image
+  const banner = await Banner.findOne({ isActive: true });
+  const fallbackProduct = banner ? null : await Product.findOne().sort({ createdAt: -1 });
+
+  const ogImageUrl =
+    banner?.image || fallbackProduct?.images?.[0] || "/og-image.jpg"; // default fallback
+
+  return {
+    openGraph: {
+      images: [
+        {
+          url: ogImageUrl, // absolute URL එකක් නම් (https://res.cloudinary.com/... වගේ) කෙලින්ම වැඩ කරයි
+          width: 1200,
+          height: 630,
+          alt: "The Store | Luxury Perfumes & Cosmetics",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      images: [ogImageUrl],
+    },
+  };
+}
 
 export default async function StoreHome() {
   await connectDB();
