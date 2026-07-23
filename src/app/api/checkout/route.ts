@@ -32,6 +32,11 @@ export async function POST(req: Request) {
 
     // 2. ⚡ ඇණවුම සාර්ථක වූ පසු ඔටෝම Stock ප්‍රමාණයන් අඩු කිරීමේ Logic එක ⚡
     for (const item of items) {
+      // Skip stock update for virtual custom gift boxes to prevent CastError
+      if (item._id.startsWith("gift-box-")) {
+        continue;
+      }
+
       // ප්‍රභේදයක් (Variant) මිලදී ගෙන තිබේ නම් (e.g. ID එකෙහි - සලකුණක් ඇත)
       if (item._id.includes("-")) {
         const [prodId, size] = item._id.split("-");
