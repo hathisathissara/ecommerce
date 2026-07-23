@@ -15,7 +15,8 @@ A full-stack e-commerce web application built with **Next.js 16**, **MongoDB**, 
 | **Shopping Cart** | Live quantity controls, delivery charge calculator, free-shipping progress bar |
 | **Wishlist** | Save favourite products, persisted via localStorage |
 | **Checkout** | Shipping form, Cash on Delivery & Bank Transfer payment methods, bank slip upload |
-| **Order Tracking** | Track order status by Order ID or email |
+| **Order Tracking** | Track order status by Order ID or email, with 1-click auto-tracking links from emails |
+| **Automated Emails** | Beautifully styled HTML invoice & order confirmation emails sent via Nodemailer |
 | **Gift Builder** | Build custom gift boxes by picking products and a box style |
 | **Contact Page** | Contact form that saves inquiries to the database, displays store info |
 | **Coupon / Promo Codes** | Apply discount codes at checkout (percentage or fixed amount) |
