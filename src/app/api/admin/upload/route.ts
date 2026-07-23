@@ -26,7 +26,6 @@ export async function POST(req: Request) {
           folder: "store_uploads",
           format: "webp",      // 1. පින්තූරය WebP බවට පත් කරයි
           quality: "auto",     // 2. පින්තූරයේ Quality එක ඔටෝ Compress කරයි (Size එක ගොඩක් අඩු වෙයි)
-          fetch_format: "webp"
         }, 
         (error, result) => {
           if (error) reject(error);
@@ -36,7 +35,11 @@ export async function POST(req: Request) {
       uploadStream.end(buffer);
     });
 
-    return NextResponse.json({ url: (uploadResult as any).secure_url }, { status: 200 });
+    // Cloudinary secure_url සමහරවිට පරණ extension එකම (e.g. .jpg) පෙන්විය හැක, ඒ නිසා අපි URL එකේ extension එක .webp වලට වෙනස් කරනවා
+    let finalUrl = (uploadResult as any).secure_url;
+    finalUrl = finalUrl.replace(/\.[^/.]+$/, ".webp");
+
+    return NextResponse.json({ url: finalUrl }, { status: 200 });
 
   } catch (error) {
     console.error("Upload Error:", error);

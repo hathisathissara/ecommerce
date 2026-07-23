@@ -88,12 +88,34 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Required fields are missing" }, { status: 400 });
     }
 
+    const product = await Product.findById(productId);
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
     const slug = name
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, "")
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
+
+    // Delete removed images from Cloudinary
+    const oldImages = product.images || [];
+    const imagesToDelete = oldImages.filter((img: string) => !images.includes(img));
+    
+    if (imagesToDelete.length > 0) {
+      try {
+        for (const imageUrl of imagesToDelete) {
+          const publicId = getPublicIdFromUrl(imageUrl);
+          if (publicId) {
+            await cloudinary.uploader.destroy(publicId);
+          }
+        }
+      } catch (cloudinaryError) {
+        console.error("Cloudinary Delete Error on Update:", cloudinaryError);
+      }
+    }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -116,6 +138,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(updatedProduct, { status: 200 });
   } catch (error) {
+    console.error("Update error:", error);
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
   }
 }

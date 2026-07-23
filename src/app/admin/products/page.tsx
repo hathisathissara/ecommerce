@@ -481,9 +481,28 @@ export default function AdminProducts() {
                   className="w-full p-2 border border-gray-200 rounded-xl bg-white text-xs text-gray-500"
                 />
                 {isEditing && (
-                  <p className="text-[10px] text-gray-400 mt-2 font-medium">
-                    ✔ {existingImages.length} images saved. Adding new ones will append them.
-                  </p>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-[10px] text-gray-400 font-medium">
+                      ✔ {existingImages.length} images saved. Adding new ones will append them.
+                    </p>
+                    {existingImages.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {existingImages.map((imgUrl, index) => (
+                          <div key={index} className="relative w-14 h-14 border border-gray-200 rounded-lg overflow-hidden group">
+                            <Image src={imgUrl} alt={`Product Image ${index + 1}`} fill unoptimized className="object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setExistingImages(existingImages.filter((_, i) => i !== index))}
+                              className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Remove Image"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
