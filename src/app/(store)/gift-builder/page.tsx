@@ -48,8 +48,8 @@ export default function GiftBuilder() {
     const fetchData = async () => {
       try {
         const [boxRes, prodRes] = await Promise.all([
-          fetch("/api/admin/boxes", { cache: "no-store" }),
-          fetch("/api/admin/products", { cache: "no-store" })
+          fetch("/api/boxes", { cache: "no-store" }),
+          fetch("/api/products", { cache: "no-store" })
         ]);
 
         if (boxRes.ok) {
@@ -60,8 +60,7 @@ export default function GiftBuilder() {
 
         if (prodRes.ok) {
           const productsData = await prodRes.json();
-          const filtered = productsData.filter((p: ProductType) => p.isGiftItem === true);
-          setGiftProducts(filtered);
+          setGiftProducts(productsData);
         }
       } catch (err) {
         console.error("Failed to load builder data", err);
