@@ -187,20 +187,20 @@ export default function AdminOrders() {
                   <h3 className="font-bold text-[10px] uppercase tracking-widest text-gray-400">Items Ordered</h3>
                   <div className="space-y-3.5 divide-y divide-gray-100">
                     {selectedOrder.items.map((item, idx) => (
-                      <div key={item._id} className={`flex gap-3 items-center justify-between ${idx > 0 ? "pt-3.5" : ""}`}>
+                      <div key={item._id} className={`flex flex-col gap-2.5 ${idx > 0 ? "pt-3.5" : ""}`}>
                         <div className="flex gap-3 items-center">
                           <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-100 relative bg-gray-50 flex-shrink-0">
                             <Image src={item.image} alt="" fill unoptimized className="object-cover" />
                           </div>
-                          <div>
-                            <p className="font-bold text-xs text-gray-950 line-clamp-1">{item.name}</p>
+                          <div className="flex-grow">
+                            <p className="font-bold text-xs text-gray-950 line-clamp-2">{item.name}</p>
                             <p className="text-[10px] text-gray-400 mt-0.5">
                               Qty: {item.quantity} &nbsp;·&nbsp; LKR {item.price.toLocaleString()}
                             </p>
                           </div>
                         </div>
                         {item.description && (
-                          <div className="max-w-[150px] text-[9px] bg-pink-50 text-pink-700 px-2 py-1 rounded-lg font-medium text-right line-clamp-2">
+                          <div className="text-[10px] bg-pink-50/60 text-pink-800 p-2.5 rounded-lg font-medium leading-relaxed border border-pink-100 break-words">
                             {item.description}
                           </div>
                         )}
