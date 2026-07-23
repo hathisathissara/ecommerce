@@ -29,7 +29,7 @@ export default function WishlistPage() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
         <div className="w-20 h-20 rounded-2xl bg-gray-50 flex items-center justify-center text-4xl mb-6">
-          🤍
+          ♡
         </div>
         <h2 className="text-xl font-black text-gray-900 mb-2">Your Wishlist is Empty</h2>
         <p className="text-xs text-gray-500 mb-8 max-w-sm leading-relaxed">
@@ -102,7 +102,7 @@ export default function WishlistPage() {
                     className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white shadow-md border border-gray-100 text-red-500 flex items-center justify-center hover:scale-105 transition z-10 text-sm"
                     aria-label="Remove from wishlist"
                   >
-                    ❤️
+                    🤍
                   </button>
                 </div>
 

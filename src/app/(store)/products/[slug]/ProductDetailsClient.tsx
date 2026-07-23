@@ -41,6 +41,7 @@ interface ReviewType {
 export default function ProductDetailsClient({ product }: ProductProps) {
   const [activeImage, setActiveImage] = useState(product.images[0]);
   const [quantity, setQuantity] = useState(1);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -197,14 +198,9 @@ export default function ProductDetailsClient({ product }: ProductProps) {
           {/* Info Column */}
           <div className="space-y-6">
             <div className="flex justify-between items-start gap-4">
-              <div>
-                <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                  {product.brand?.name || "Premium Quality"}
-                </p>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 mt-1 leading-snug">
-                  {product.name}
-                </h1>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 leading-snug">
+                {product.name}
+              </h1>
 
               {/* Wishlist Button */}
               <button
@@ -223,13 +219,13 @@ export default function ProductDetailsClient({ product }: ProductProps) {
                     : "bg-white text-gray-400 hover:text-red-400 border-gray-200"
                 }`}
               >
-                {isLiked ? "❤️" : "🤍"}
+                {isLiked ? "🤍" : "♡"}
               </button>
             </div>
 
             {/* Rating */}
             {averageRating && (
-              <div className="flex items-center gap-2 border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2">
                 <span className="text-yellow-500 font-bold text-sm">
                   {"★".repeat(Math.round(Number(averageRating)))}
                 </span>
@@ -239,8 +235,15 @@ export default function ProductDetailsClient({ product }: ProductProps) {
               </div>
             )}
 
+            {/* Brand & Category */}
+            <div className="border-b border-gray-100 pb-4">
+              <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">
+                {product.brand?.name || "Premium Quality"} {product.category?.name ? `| ${product.category.name}` : ""}
+              </p>
+            </div>
+
             {/* Price & Stock */}
-            <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center justify-between gap-4 flex-wrap pt-2">
               <div className="flex items-baseline gap-3">
                 {currentDiscountPrice ? (
                   <>
@@ -304,21 +307,11 @@ export default function ProductDetailsClient({ product }: ProductProps) {
               </div>
             )}
 
-            {/* Description */}
-            <div className="border-t border-gray-100 pt-5 space-y-2">
-              <label className="block text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                Description
-              </label>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                {product.description}
-              </p>
-            </div>
-
             {/* Add to Cart Actions */}
-            <div className="border-t border-gray-100 pt-6 space-y-4">
+            <div className="border-t border-gray-100 pt-5 space-y-4">
               {currentStock > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">Quantity</span>
+                  <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Quantity</span>
                   <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
                     <button
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -346,6 +339,26 @@ export default function ProductDetailsClient({ product }: ProductProps) {
               >
                 {currentStock > 0 ? "Add to Cart 🛒" : "Out of Stock"}
               </button>
+            </div>
+
+            {/* Description */}
+            <div className="border-t border-gray-100 pt-5 space-y-2">
+              <label className="block text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                Description
+              </label>
+              <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                {isDescriptionExpanded || product.description.length <= 150 
+                  ? product.description
+                  : `${product.description.substring(0, 150)}...`}
+                {product.description.length > 150 && (
+                  <button
+                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    className="text-gray-900 font-bold ml-1 hover:underline focus:outline-none"
+                  >
+                    {isDescriptionExpanded ? "Read Less" : "Read More"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
