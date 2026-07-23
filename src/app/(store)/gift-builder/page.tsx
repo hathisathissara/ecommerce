@@ -47,8 +47,10 @@ export default function GiftBuilder() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const boxRes = await fetch("/api/admin/boxes");
-        const prodRes = await fetch("/api/admin/products");
+        const [boxRes, prodRes] = await Promise.all([
+          fetch("/api/admin/boxes", { cache: "no-store" }),
+          fetch("/api/admin/products", { cache: "no-store" })
+        ]);
 
         if (boxRes.ok) {
           const boxesData = await boxRes.json();
