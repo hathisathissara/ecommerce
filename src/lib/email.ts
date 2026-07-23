@@ -17,6 +17,7 @@ export async function sendOrderEmail(order: any) {
   const settings = await Setting.findOne();
   const storeName = settings?.storeName || "THE STORE";
   const storeNameUpper = storeName.toUpperCase();
+  const contactEmail = settings?.contactEmail || "";
 
   // මිලදී ගත් භාණ්ඩ ලැයිස්තුව HTML table එකක් ලෙස සැකසීම
   const itemsHtml = order.items
@@ -79,7 +80,7 @@ export async function sendOrderEmail(order: any) {
       </div>
 
       <div style="text-align: center; border-top: 1px solid #f3f4f6; padding-top: 20px; font-size: 11px; color: #9ca3af; margin-top: 25px;">
-        <p>If you have any questions or concerns, please reply to this email.</p>
+        <p>If you have any questions or concerns, please reply to this email.${contactEmail}</p>
         <p style="margin-top: 5px;">&copy; ${new Date().getFullYear()} ${storeNameUpper}. All rights reserved.</p>
       </div>
     </div>
