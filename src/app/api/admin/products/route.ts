@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       stock: Number(stock),
       images,
       category,
-      brand: brand || undefined,
+      brand: (brand && brand !== "") ? brand : null,
       isGiftItem: Boolean(isGiftItem),
       variants: variants || [],
     });
@@ -129,7 +129,7 @@ export async function PUT(req: Request) {
         stock: Number(stock),
         images,
         category,
-        brand: brand || undefined,
+        brand: (brand && brand !== "") ? brand : null,
         isGiftItem: Boolean(isGiftItem),
         variants: variants || [],
       },

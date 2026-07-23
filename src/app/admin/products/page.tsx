@@ -89,7 +89,6 @@ export default function AdminProducts() {
   useEffect(() => {
     const init = async () => { await fetchData(); };
     init();
-
   }, []);
 
   const handleAddVariantToList = () => {
@@ -116,7 +115,7 @@ export default function AdminProducts() {
     setDiscountPrice(product.discountPrice ? product.discountPrice.toString() : "");
     setStock(product.stock.toString());
     setSelectedCategory(product.category._id);
-    setSelectedBrand(product.brand ? product.brand._id : "");
+    setSelectedBrand(product.brand ? product.brand._id : ""); // Brand එකක් නැත්නම් හිස් වේ
     setIsGiftItem(product.isGiftItem);
     setExistingImages(product.images);
     
@@ -131,6 +130,11 @@ export default function AdminProducts() {
     );
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Edit කරද්දී පරණ පින්තූරයක් එකින් එක ඉවත් කිරීම
+  const handleRemoveExistingImage = (urlToDestroy: string) => {
+    setExistingImages((prev) => prev.filter((img) => img !== urlToDestroy));
   };
 
   const handleCancelEdit = () => {
@@ -195,11 +199,7 @@ export default function AdminProducts() {
           const uploadData = await uploadRes.json();
           uploadedUrls.push(uploadData.url);
         }
-        if (isEditing) {
-          finalImages = [...finalImages, ...uploadedUrls];
-        } else {
-          finalImages = uploadedUrls;
-        }
+        finalImages = [...finalImages, ...uploadedUrls];
       }
 
       if (finalImages.length === 0) {
@@ -221,7 +221,7 @@ export default function AdminProducts() {
           stock: Number(stock),
           images: finalImages,
           category: selectedCategory,
-          brand: selectedBrand || undefined,
+          brand: selectedBrand ? selectedBrand : null, // ⚡ dynamic: brand එකක් නැත්නම් null ලෙස යවා CastError වළක්වයි ⚡
           isGiftItem,
           variants: variants.map(v => ({
             size: v.size,
@@ -384,7 +384,7 @@ export default function AdminProducts() {
                     onChange={(e) => setSelectedBrand(e.target.value)}
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs text-gray-900 bg-white outline-none focus:ring-2 focus:ring-gray-900"
                   >
-                    <option value="">Select Brand</option>
+                    <option value="">No Brand (Select Brand)</option>
                     {brands.map((b) => (
                       <option key={b._id} value={b._id}>{b.name}</option>
                     ))}
@@ -468,9 +468,33 @@ export default function AdminProducts() {
 
             {/* Images and Checkbox */}
             <div className="border-t border-gray-100 pt-5 space-y-4">
+              
+              {/* සජීවීව පරණ පින්තූර Preview කර ඉවත් කරන කොටස */}
+              {isEditing && existingImages.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    Current Saved Images (Click ✕ to delete)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {existingImages.map((imgUrl, idx) => (
+                      <div key={idx} className="relative w-16 h-16 border border-gray-200 rounded-xl overflow-hidden group">
+                        <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingImage(imgUrl)}
+                          className="absolute inset-0 bg-red-600/90 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition duration-200 text-[10px] font-bold"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  Product Images
+                  Upload New Images {isEditing ? "(Appends to current images)" : "*"}
                 </label>
                 <input
                   id="product-images"
@@ -480,30 +504,6 @@ export default function AdminProducts() {
                   onChange={(e) => setImageFiles(e.target.files)}
                   className="w-full p-2 border border-gray-200 rounded-xl bg-white text-xs text-gray-500"
                 />
-                {isEditing && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-[10px] text-gray-400 font-medium">
-                      ✔ {existingImages.length} images saved. Adding new ones will append them.
-                    </p>
-                    {existingImages.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {existingImages.map((imgUrl, index) => (
-                          <div key={index} className="relative w-14 h-14 border border-gray-200 rounded-lg overflow-hidden group">
-                            <Image src={imgUrl} alt={`Product Image ${index + 1}`} fill unoptimized className="object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => setExistingImages(existingImages.filter((_, i) => i !== index))}
-                              className="absolute top-1 right-1 bg-red-500/90 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Remove Image"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -593,6 +593,10 @@ export default function AdminProducts() {
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="inline-block text-[9px] bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded font-bold uppercase">
                             {prod.category?.name}
+                          </span>
+                          {/* Brand Badge display - No Brand fallback added */}
+                          <span className="inline-block text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase">
+                            {prod.brand?.name || "No Brand"}
                           </span>
                           {prod.sku && (
                             <span className="inline-block text-[9px] bg-gray-900/5 text-gray-600 px-1.5 py-0.5 rounded font-mono font-bold">

@@ -238,7 +238,7 @@ export default function ProductDetailsClient({ product }: ProductProps) {
             {/* Brand & Category */}
             <div className="border-b border-gray-100 pb-4">
               <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">
-                {product.brand?.name || "Premium Quality"} {product.category?.name ? `| ${product.category.name}` : ""}
+                {product.brand?.name || "No Brand"} {product.category?.name ? `| ${product.category.name}` : ""}
               </p>
             </div>
 

@@ -16,6 +16,14 @@ interface BoxType {
   image: string;
 }
 
+interface VariantType {
+  size: string;
+  price: number;
+  discountPrice?: number;
+  stock: number;
+  sku?: string;
+}
+
 interface ProductType {
   _id: string;
   name: string;
@@ -23,10 +31,14 @@ interface ProductType {
   discountPrice?: number;
   images: string[];
   isGiftItem: boolean;
+  variants?: VariantType[]; // <-- Variants array එක එකතු කළා
 }
 
+// තෑගි පෙට්ටියට දමන අයිතම ව්‍යුහය (ප්‍රභේදය සමඟින්)
 interface SelectedItemType {
+  _id: string; // Dynamic Unique ID (product-id-size)
   product: ProductType;
+  selectedVariant: VariantType | null; // තෝරාගත් ප්‍රභේදය
   quantity: number;
 }
 
@@ -41,6 +53,9 @@ export default function GiftBuilder() {
   const [selectedItems, setSelectedItems] = useState<SelectedItemType[]>([]);
   const [cardTheme, setCardTheme] = useState("None");
   const [cardMessage, setCardMessage] = useState("");
+
+  // Card එක මත තෝරාගෙන ඇති ප්‍රභේදය තාවකාලිකව තබාගන්නා State එක (Product ID -> Selected Variant)
+  const [activeVariants, setActiveVariants] = useState<Record<string, VariantType>>({});
 
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +75,9 @@ export default function GiftBuilder() {
 
         if (prodRes.ok) {
           const productsData = await prodRes.json();
-          setGiftProducts(productsData);
+          // Gift Item එකක් ලෙස සකසා ඇති භාණ්ඩ පමණක් පෙරා ගනී
+          const filtered = productsData.filter((p: ProductType) => p.isGiftItem === true);
+          setGiftProducts(filtered);
         }
       } catch (err) {
         console.error("Failed to load builder data", err);
@@ -71,37 +88,57 @@ export default function GiftBuilder() {
     fetchData();
   }, []);
 
-  const handleToggleItem = (product: ProductType) => {
+  // Card එකක් මත ඇති ප්‍රභේදයක් වෙනස් කිරීමේ Function එක
+  const handleSelectVariant = (productId: string, variant: VariantType) => {
+    setActiveVariants((prev) => ({ ...prev, [productId]: variant }));
+  };
+
+  // Item එකක් (ප්‍රභේදය සමඟින්) Box එකට එකතු කිරීම
+  const handleToggleItem = (product: ProductType, variant: VariantType | null) => {
+    const uniqueId = variant ? `${product._id}-${variant.size}` : product._id;
+
     setSelectedItems((prev) => {
-      const exists = prev.find((i) => i.product._id === product._id);
+      const exists = prev.find((i) => i._id === uniqueId);
       if (exists) {
-        return prev.filter((i) => i.product._id !== product._id);
+        return prev.filter((i) => i._id !== uniqueId);
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { _id: uniqueId, product, selectedVariant: variant, quantity: 1 }];
     });
   };
 
-  const handleQuantityChange = (productId: string, newQty: number) => {
+  // Quantity එක වෙනස් කිරීම (Unique ID එකට අදාළව)
+  const handleQuantityChange = (uniqueId: string, newQty: number) => {
     if (newQty <= 0) {
-      setSelectedItems((prev) => prev.filter((i) => i.product._id !== productId));
+      setSelectedItems((prev) => prev.filter((i) => i._id !== uniqueId));
       return;
     }
     setSelectedItems((prev) =>
-      prev.map((i) => (i.product._id === productId ? { ...i, quantity: newQty } : i))
+      prev.map((i) => (i._id === uniqueId ? { ...i, quantity: newQty } : i))
     );
   };
 
-  const itemsTotal = selectedItems.reduce(
-    (acc, item) => acc + (item.product.discountPrice || item.product.price) * item.quantity,
-    0
-  );
+  // මිල ගණන් එකතුව ගණනය කිරීම (ප්‍රභේදය අනුව dynamic ලෙස)
+  const itemsTotal = selectedItems.reduce((acc, item) => {
+    const price = item.selectedVariant
+      ? (item.selectedVariant.discountPrice || item.selectedVariant.price)
+      : (item.product.discountPrice || item.product.price);
+    return acc + price * item.quantity;
+  }, 0);
+
   const builderTotal = (selectedBox?.price || 0) + itemsTotal;
 
   const handleAddBoxToCart = () => {
     if (!selectedBox) return;
 
     const uniqueId = `gift-box-${Date.now()}`;
-    const itemDetails = selectedItems.map((i) => `${i.product.name} (x${i.quantity})`).join(", ");
+    
+    // බඩු විස්තරය ලස්සනට සෑදීම (e.g. Dior (100ml) (x2))
+    const itemDetails = selectedItems
+      .map((i) => {
+        const name = i.selectedVariant ? `${i.product.name} (${i.selectedVariant.size})` : i.product.name;
+        return `${name} (x${i.quantity})`;
+      })
+      .join(", ");
 
     const virtualGiftBox = {
       _id: uniqueId,
@@ -243,7 +280,18 @@ export default function GiftBuilder() {
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {giftProducts.map((prod) => {
-                      const selectedItem = selectedItems.find((i) => i.product._id === prod._id);
+                      const hasVariants = prod.variants && prod.variants.length > 0;
+                      // දැනට තෝරාගෙන ඇති Variant එක (නැත්නම් පළමු එක) ලබාගනී
+                      const currentVariant = activeVariants[prod._id] || (hasVariants ? prod.variants![0] : null);
+                      
+                      // Unique ID එක සාදාගනී
+                      const uniqueId = currentVariant ? `${prod._id}-${currentVariant.size}` : prod._id;
+                      const selectedItem = selectedItems.find((i) => i._id === uniqueId);
+
+                      const displayPrice = currentVariant
+                        ? (currentVariant.discountPrice || currentVariant.price)
+                        : (prod.discountPrice || prod.price);
+
                       return (
                         <div
                           key={prod._id}
@@ -261,10 +309,32 @@ export default function GiftBuilder() {
                             />
                           </div>
 
-                          <div className="flex-grow mb-3">
+                          <div className="flex-grow mb-3 space-y-2">
                             <h4 className="font-bold text-xs text-gray-900 line-clamp-1">{prod.name}</h4>
-                            <p className="text-xs text-gray-500 font-semibold mt-0.5">
-                              LKR {(prod.discountPrice || prod.price).toLocaleString()}
+                            
+                            {/* Product Variants (ප්‍රභේද බටන්ස්) */}
+                            {hasVariants && (
+                              <div className="flex flex-wrap gap-1">
+                                {prod.variants!.map((v, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => handleSelectVariant(prod._id, v)}
+                                    className={`px-1.5 py-0.5 border rounded text-[9px] font-bold transition ${
+                                      currentVariant?.size === v.size
+                                        ? "border-black bg-black text-white"
+                                        : "border-gray-200 hover:border-gray-300 bg-white"
+                                    }`}
+                                  >
+                                    {v.size}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* dynamic මිල දර්ශනය */}
+                            <p className="text-xs text-gray-500 font-semibold">
+                              LKR {displayPrice.toLocaleString()}
                             </p>
                           </div>
 
@@ -272,21 +342,21 @@ export default function GiftBuilder() {
                             <div className="space-y-2">
                               <div className="flex items-center justify-between border border-gray-200 rounded-lg overflow-hidden bg-white">
                                 <button
-                                  onClick={() => handleQuantityChange(prod._id, selectedItem.quantity - 1)}
+                                  onClick={() => handleQuantityChange(uniqueId, selectedItem.quantity - 1)}
                                   className="px-2.5 py-1 text-xs font-bold text-gray-500 hover:bg-gray-100 transition"
                                 >
                                   −
                                 </button>
                                 <span className="text-xs font-black text-gray-900">{selectedItem.quantity}</span>
                                 <button
-                                  onClick={() => handleQuantityChange(prod._id, selectedItem.quantity + 1)}
+                                  onClick={() => handleQuantityChange(uniqueId, selectedItem.quantity + 1)}
                                   className="px-2.5 py-1 text-xs font-bold text-gray-500 hover:bg-gray-100 transition"
                                 >
                                   +
                                 </button>
                               </div>
                               <button
-                                onClick={() => handleQuantityChange(prod._id, 0)}
+                                onClick={() => handleQuantityChange(uniqueId, 0)}
                                 className="w-full text-[10px] font-bold bg-red-50 text-red-600 py-1.5 rounded-lg hover:bg-red-100 transition"
                               >
                                 Remove
@@ -294,7 +364,7 @@ export default function GiftBuilder() {
                             </div>
                           ) : (
                             <button
-                              onClick={() => handleToggleItem(prod)}
+                              onClick={() => handleToggleItem(prod, currentVariant)}
                               className="w-full py-2 bg-gray-900 text-white rounded-xl text-[10px] font-bold hover:bg-gray-700 transition"
                             >
                               Add to Box
@@ -411,16 +481,25 @@ export default function GiftBuilder() {
                   <p className="text-[11px] text-gray-400 italic">No items added yet</p>
                 ) : (
                   <ul className="space-y-2 border-b border-gray-200 pb-3">
-                    {selectedItems.map((item) => (
-                      <li key={item.product._id} className="flex justify-between text-xs text-gray-600 gap-4">
-                        <span className="line-clamp-1">
-                          • {item.product.name} <span className="font-bold text-gray-400">×{item.quantity}</span>
-                        </span>
-                        <span className="font-bold text-gray-900 flex-shrink-0">
-                          LKR {((item.product.discountPrice || item.product.price) * item.quantity).toLocaleString()}
-                        </span>
-                      </li>
-                    ))}
+                    {selectedItems.map((item) => {
+                      const displayName = item.selectedVariant 
+                        ? `${item.product.name} (${item.selectedVariant.size})`
+                        : item.product.name;
+                      const displayPrice = item.selectedVariant
+                        ? (item.selectedVariant.discountPrice || item.selectedVariant.price)
+                        : (item.product.discountPrice || item.product.price);
+
+                      return (
+                        <li key={item._id} className="flex justify-between text-xs text-gray-600 gap-4">
+                          <span className="line-clamp-1">
+                            • {displayName} <span className="font-bold text-gray-400">×{item.quantity}</span>
+                          </span>
+                          <span className="font-bold text-gray-900 flex-shrink-0">
+                            LKR {(displayPrice * item.quantity).toLocaleString()}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
