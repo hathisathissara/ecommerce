@@ -1,8 +1,9 @@
 // src/app/(store)/track-order/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 interface TrackedOrderType {
   _id: string;
@@ -13,15 +14,23 @@ interface TrackedOrderType {
   items: Array<{ _id: string; name: string; quantity: number }>;
 }
 
-export default function TrackOrder() {
-  const [orderId, setOrderId] = useState("");
+function TrackOrderContent() {
+  const searchParams = useSearchParams();
+  const initialOrderId = searchParams.get("orderId") || "";
+
+  const [orderId, setOrderId] = useState(initialOrderId);
   const [order, setOrder] = useState<TrackedOrderType | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleTrack = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!orderId) return;
+  useEffect(() => {
+    if (initialOrderId) {
+      handleTrackByOrderId(initialOrderId);
+    }
+  }, [initialOrderId]);
+
+  async function handleTrackByOrderId(id: string) {
+    if (!id) return;
 
     setLoading(true);
     setError("");
@@ -31,7 +40,7 @@ export default function TrackOrder() {
       const res = await fetch("/api/orders/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: orderId.trim() }),
+        body: JSON.stringify({ orderId: id.trim() }),
       });
 
       const data = await res.json();
@@ -47,6 +56,11 @@ export default function TrackOrder() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleTrackByOrderId(orderId);
   };
 
   const getStatusStep = (status: string) => {
@@ -184,5 +198,13 @@ export default function TrackOrder() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TrackOrder() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500 font-semibold bg-gray-50">Loading Tracking Info...</div>}>
+      <TrackOrderContent />
+    </Suspense>
   );
 }

@@ -76,7 +76,12 @@ export async function sendOrderEmail(order: any) {
           ${order.discountAmount > 0 ? `<p style="margin: 0; color: #dc2626; font-weight: 600;"><strong>Discount (${order.couponCode}):</strong> - LKR ${order.discountAmount.toLocaleString()}</p>` : ""}
           <p style="margin: 0;"><strong>Shipping Fee:</strong> ${order.shippingFee === 0 ? "FREE" : `LKR ${order.shippingFee.toLocaleString()}`}</p>
           <p style="margin: 8px 0 0 0; font-size: 16px; font-weight: 800; color: #111827; border-top: 1px solid #e5e7eb; padding-top: 8px;">Grand Total: LKR ${order.totalAmount.toLocaleString()}</p>
-        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 35px; margin-bottom: 15px;">
+        <a href="${process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || 'http://localhost:3000'}/track-order?orderId=${order._id}" style="background-color: #111827; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+          Track Your Order
+        </a>
       </div>
 
       <div style="text-align: center; border-top: 1px solid #f3f4f6; padding-top: 20px; font-size: 11px; color: #9ca3af; margin-top: 25px;">
