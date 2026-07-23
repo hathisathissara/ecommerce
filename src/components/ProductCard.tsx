@@ -81,16 +81,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         >
           {isLiked ? "❤️" : "🤍"}
         </button>
-
-        {/* Quick Add hover overlay */}
-        <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button
-            onClick={handleAddToCart}
-            className="w-full bg-gray-900 text-white py-2.5 text-xs font-bold hover:bg-gray-700 transition-colors"
-          >
-            + Quick Add to Cart
-          </button>
-        </div>
       </Link>
 
       {/* Info */}
@@ -103,13 +93,37 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
 
         {/* Price Row */}
-        <div className="flex items-baseline gap-2 mt-2.5">
-          <span className="text-sm font-black text-gray-900">LKR {displayPrice.toLocaleString()}</span>
-          {product.discountPrice && (
-            <span className="line-through text-[11px] text-gray-400 font-normal">
-              LKR {product.price.toLocaleString()}
-            </span>
-          )}
+        <div className="flex items-center justify-between gap-2 mt-2.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-black text-gray-900">LKR {displayPrice.toLocaleString()}</span>
+            {product.discountPrice && (
+              <span className="line-through text-[11px] text-gray-400 font-normal">
+                LKR {product.price.toLocaleString()}
+              </span>
+            )}
+          </div>
+
+          {/* Add to Cart icon button - always visible */}
+          <button
+            onClick={handleAddToCart}
+            aria-label="Add to cart"
+            className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-900 text-white hover:bg-gray-700 active:scale-95 transition-all duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4"
+            >
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+          </button>
         </div>
       </Link>
     </div>
