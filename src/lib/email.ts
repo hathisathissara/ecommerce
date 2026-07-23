@@ -36,7 +36,7 @@ export async function sendOrderEmail(order: any) {
     )
     .join("");
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = "https://lumosstore.vercel.app";
 
   // ලස්සනට මෝස්තර කර ඇති HTML Invoice එක
   const emailHtml = `
