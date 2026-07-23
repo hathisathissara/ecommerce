@@ -36,6 +36,10 @@ export async function sendOrderEmail(order: any) {
     )
     .join("");
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                  process.env.BASE_URL || 
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
   // ලස්සනට මෝස්තර කර ඇති HTML Invoice එක
   const emailHtml = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
@@ -79,7 +83,7 @@ export async function sendOrderEmail(order: any) {
       </div>
 
       <div style="text-align: center; margin-top: 35px; margin-bottom: 15px;">
-        <a href="${process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || 'http://localhost:3000'}/track-order?orderId=${order._id}" style="background-color: #111827; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+        <a href="${baseUrl}/track-order?orderId=${order._id}" style="background-color: #111827; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
           Track Your Order
         </a>
       </div>
