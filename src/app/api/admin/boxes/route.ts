@@ -32,36 +32,46 @@ export async function GET() {
   }
 }
 
-// 2. POST - Create new box style
+// 2. POST - Create new box style with Description
 export async function POST(req: Request) {
   try {
     await connectDB();
-    const { name, price, image } = await req.json();
+    const { name, description, price, image } = await req.json(); // <-- description ලබාගනී
 
-    if (!name || !price || !image) {
+    if (!name || !description || !price || !image) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
-    const newBox = await Box.create({ name, price: Number(price), image });
+    const newBox = await Box.create({ 
+      name, 
+      description, // <-- Database සේව් වීම
+      price: Number(price), 
+      image 
+    });
     return NextResponse.json(newBox, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create box style" }, { status: 500 });
   }
 }
 
-// 3. PUT - Update box style
+// 3. PUT - Update box style with Description
 export async function PUT(req: Request) {
   try {
     await connectDB();
-    const { boxId, name, price, image } = await req.json();
+    const { boxId, name, description, price, image } = await req.json(); // <-- description ලබාගනී
 
-    if (!boxId || !name || !price || !image) {
+    if (!boxId || !name || !description || !price || !image) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
     const updatedBox = await Box.findByIdAndUpdate(
       boxId,
-      { name, price: Number(price), image },
+      { 
+        name, 
+        description, // <-- Database යාවත්කාලීන වීම
+        price: Number(price), 
+        image 
+      },
       { new: true }
     );
 
@@ -71,7 +81,7 @@ export async function PUT(req: Request) {
   }
 }
 
-// 4. DELETE - Delete box style
+// 4. DELETE - Delete box style & Cloudinary Image
 export async function DELETE(req: Request) {
   try {
     await connectDB();
@@ -87,7 +97,6 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Box style not found" }, { status: 404 });
     }
 
-    // Delete image from Cloudinary
     const publicId = getPublicIdFromUrl(box.image);
     if (publicId) {
       await cloudinary.uploader.destroy(publicId);

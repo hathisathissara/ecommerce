@@ -7,6 +7,7 @@ import Image from "next/image";
 interface BoxType {
   _id: string;
   name: string;
+  description: string;
   price: number;
   image: string;
 }
@@ -14,6 +15,7 @@ interface BoxType {
 export default function AdminBoxes() {
   const [boxes, setBoxes] = useState<BoxType[]>([]);
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   
@@ -43,6 +45,7 @@ export default function AdminBoxes() {
     setIsEditing(true);
     setEditingBoxId(box._id);
     setName(box.name);
+    setDescription(box.description);
     setPrice(box.price.toString());
     setExistingImage(box.image);
     setError("");
@@ -52,6 +55,7 @@ export default function AdminBoxes() {
     setIsEditing(false);
     setEditingBoxId("");
     setName("");
+    setDescription("");
     setPrice("");
     setImageFile(null);
     setExistingImage("");
@@ -76,7 +80,7 @@ export default function AdminBoxes() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price) {
+    if (!name || !price || !description) {
       setError("Please fill all fields");
       return;
     }
@@ -111,6 +115,7 @@ export default function AdminBoxes() {
         body: JSON.stringify({
           boxId: isEditing ? editingBoxId : undefined,
           name,
+          description,
           price: Number(price),
           image: finalImageUrl,
         }),
@@ -168,6 +173,18 @@ export default function AdminBoxes() {
             </div>
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Description
+              </label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Price (LKR)
               </label>
               <input
@@ -212,7 +229,7 @@ export default function AdminBoxes() {
           </form>
         </div>
 
-        {/* Existing Box Styles */}
+
         <div className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
           <div>
             <h2 className="text-base sm:text-lg font-black text-gray-900">Existing Box Styles</h2>
@@ -227,7 +244,7 @@ export default function AdminBoxes() {
                 <thead>
                   <tr className="border-b bg-gray-50 text-gray-400 font-bold uppercase tracking-widest text-[10px]">
                     <th className="p-3.5">Image</th>
-                    <th className="p-3.5">Name</th>
+                    <th className="p-3.5">Name & Description</th> 
                     <th className="p-3.5">Price</th>
                     <th className="p-3.5 text-center">Actions</th>
                   </tr>
@@ -246,7 +263,11 @@ export default function AdminBoxes() {
                           />
                         </div>
                       </td>
-                      <td className="p-3.5 font-bold text-gray-900">{box.name}</td>
+                      {/* Name එකට යටින් Description එක පෙන්වයි */}
+                      <td className="p-3.5 space-y-1">
+                        <p className="font-bold text-gray-900">{box.name}</p>
+                        <p className="text-xs text-gray-400 line-clamp-1">{box.description}</p>
+                      </td>
                       <td className="p-3.5 font-semibold text-gray-500">LKR {box.price.toLocaleString()}</td>
                       <td className="p-3.5 text-center">
                         <div className="inline-flex items-center gap-1.5">

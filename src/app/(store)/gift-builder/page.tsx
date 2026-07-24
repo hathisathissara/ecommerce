@@ -12,6 +12,7 @@ const CARD_THEMES = ["None", "Birthday", "Anniversary", "Thank You", "Love", "Ge
 interface BoxType {
   _id: string;
   name: string;
+  description: string;
   price: number;
   image: string;
 }
@@ -31,7 +32,7 @@ interface ProductType {
   discountPrice?: number;
   images: string[];
   isGiftItem: boolean;
-  variants?: VariantType[]; // <-- Variants array එක එකතු කළා
+  variants?: VariantType[];
 }
 
 // තෑගි පෙට්ටියට දමන අයිතම ව්‍යුහය (ප්‍රභේදය සමඟින්)
@@ -75,7 +76,6 @@ export default function GiftBuilder() {
 
         if (prodRes.ok) {
           const productsData = await prodRes.json();
-          // Gift Item එකක් ලෙස සකසා ඇති භාණ්ඩ පමණක් පෙරා ගනී
           const filtered = productsData.filter((p: ProductType) => p.isGiftItem === true);
           setGiftProducts(filtered);
         }
@@ -88,12 +88,10 @@ export default function GiftBuilder() {
     fetchData();
   }, []);
 
-  // Card එකක් මත ඇති ප්‍රභේදයක් වෙනස් කිරීමේ Function එක
   const handleSelectVariant = (productId: string, variant: VariantType) => {
     setActiveVariants((prev) => ({ ...prev, [productId]: variant }));
   };
 
-  // Item එකක් (ප්‍රභේදය සමඟින්) Box එකට එකතු කිරීම
   const handleToggleItem = (product: ProductType, variant: VariantType | null) => {
     const uniqueId = variant ? `${product._id}-${variant.size}` : product._id;
 
@@ -106,7 +104,6 @@ export default function GiftBuilder() {
     });
   };
 
-  // Quantity එක වෙනස් කිරීම (Unique ID එකට අදාළව)
   const handleQuantityChange = (uniqueId: string, newQty: number) => {
     if (newQty <= 0) {
       setSelectedItems((prev) => prev.filter((i) => i._id !== uniqueId));
@@ -117,7 +114,6 @@ export default function GiftBuilder() {
     );
   };
 
-  // මිල ගණන් එකතුව ගණනය කිරීම (ප්‍රභේදය අනුව dynamic ලෙස)
   const itemsTotal = selectedItems.reduce((acc, item) => {
     const price = item.selectedVariant
       ? (item.selectedVariant.discountPrice || item.selectedVariant.price)
@@ -132,7 +128,6 @@ export default function GiftBuilder() {
 
     const uniqueId = `gift-box-${Date.now()}`;
     
-    // බඩු විස්තරය ලස්සනට සෑදීම (e.g. Dior (100ml) (x2))
     const itemDetails = selectedItems
       .map((i) => {
         const name = i.selectedVariant ? `${i.product.name} (${i.selectedVariant.size})` : i.product.name;
@@ -211,7 +206,7 @@ export default function GiftBuilder() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Main Workspace */}
-          <div className="lg:col-span-8 bg-white border border-gray-100 p-6 sm:p-8 rounded-2xl shadow-sm min-h-[400px]">
+          <div className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-2xl shadow-sm min-h-[400px]">
             {/* STEP 1 */}
             {step === 1 && (
               <div className="space-y-6">
@@ -230,23 +225,35 @@ export default function GiftBuilder() {
                       <div
                         key={box._id}
                         onClick={() => setSelectedBox(box)}
-                        className={`border-2 rounded-2xl p-4 cursor-pointer text-center transition-all duration-200 ${
+                        className={`border-2 rounded-2xl p-4 cursor-pointer text-center transition-all duration-200 flex flex-col justify-between ${
                           selectedBox?._id === box._id
                             ? "border-gray-900 bg-gray-50/50"
                             : "border-gray-100 hover:border-gray-300 bg-white"
                         }`}
                       >
-                        <div className="aspect-[4/3] w-full relative overflow-hidden rounded-xl bg-gray-50 mb-3">
-                          <Image
-                            src={box.image}
-                            alt={box.name}
-                            fill
-                            unoptimized
-                            className="object-cover"
-                          />
+                        <div>
+                          <div className="aspect-[4/3] w-full relative overflow-hidden rounded-xl bg-gray-50 mb-3">
+                            <Image
+                              src={box.image}
+                              alt={box.name}
+                              fill
+                              unoptimized
+                              className="object-cover"
+                            />
+                          </div>
+                          <h3 className="font-bold text-sm text-gray-900">{box.name}</h3>
+                          
+                          {/* ⚡ අලුතින් එක්කළ: පෙට්ටියේ විස්තරය (Description) පෙන්වන කොටස ⚡ */}
+                          {box.description && (
+                            <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed line-clamp-2">
+                              {box.description}
+                            </p>
+                          )}
                         </div>
-                        <h3 className="font-bold text-sm text-gray-900">{box.name}</h3>
-                        <p className="text-xs text-gray-500 font-semibold mt-1">LKR {box.price.toLocaleString()}</p>
+                        
+                        <p className="text-xs text-gray-500 font-extrabold mt-3 border-t pt-2">
+                          LKR {box.price.toLocaleString()}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -281,10 +288,8 @@ export default function GiftBuilder() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {giftProducts.map((prod) => {
                       const hasVariants = prod.variants && prod.variants.length > 0;
-                      // දැනට තෝරාගෙන ඇති Variant එක (නැත්නම් පළමු එක) ලබාගනී
                       const currentVariant = activeVariants[prod._id] || (hasVariants ? prod.variants![0] : null);
                       
-                      // Unique ID එක සාදාගනී
                       const uniqueId = currentVariant ? `${prod._id}-${currentVariant.size}` : prod._id;
                       const selectedItem = selectedItems.find((i) => i._id === uniqueId);
 
@@ -332,7 +337,6 @@ export default function GiftBuilder() {
                               </div>
                             )}
 
-                            {/* dynamic මිල දර්ශනය */}
                             <p className="text-xs text-gray-500 font-semibold">
                               LKR {displayPrice.toLocaleString()}
                             </p>
@@ -463,14 +467,22 @@ export default function GiftBuilder() {
             <h2 className="text-lg font-black text-gray-900">Your Gift Box Summary</h2>
 
             <div className="space-y-4 text-xs sm:text-sm text-gray-600">
-              {/* Selected Box */}
+              {/* Selected Box (සාරාංශය තුලද පෙට්ටියේ විස්තරය dynamic පෙන්වයි) */}
               {selectedBox && (
-                <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-                  <div>
-                    <span className="block font-bold text-gray-900">Box Style</span>
-                    <span className="text-[11px] text-gray-400 font-semibold">{selectedBox.name}</span>
+                <div className="border-b border-gray-200 pb-3 space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="block font-bold text-gray-900">Box Style</span>
+                      <span className="text-[11px] text-gray-400 font-semibold">{selectedBox.name}</span>
+                    </div>
+                    <span className="font-bold text-gray-900">LKR {selectedBox.price.toLocaleString()}</span>
                   </div>
-                  <span className="font-bold text-gray-900">LKR {selectedBox.price.toLocaleString()}</span>
+                  {/* පෙට්ටියේ විස්තරය Sidebar එකේද පෙන්වයි */}
+                  {selectedBox.description && (
+                    <p className="text-[10px] text-gray-400 italic leading-relaxed">
+                      💡 {selectedBox.description}
+                    </p>
+                  )}
                 </div>
               )}
 
