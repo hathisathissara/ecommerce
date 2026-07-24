@@ -286,7 +286,7 @@ export default function ProductDetailsClient({ product }: ProductProps) {
             {hasVariants && (
               <div className="space-y-2 border-t border-gray-100 pt-5">
                 <label className="block text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                  Select Size
+                  Select Option
                 </label>
                 <div className="flex gap-2">
                   {product.variants!.map((v, idx) => (
