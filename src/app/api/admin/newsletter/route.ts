@@ -83,7 +83,6 @@ export async function POST(req: Request) {
             <p style="margin: 0 0 5px 0;">You are receiving this email because you subscribed to our newsletter on our website.</p>
             <p style="margin: 0;">
               No longer want to receive these emails? 
-              {/* ⚡ පාරිභෝගිකයාගේ ඊමේල් එක ඔටෝම ලින්ක් එකට එකතු වේ ⚡ */}
               <a href="${baseUrl}/unsubscribe?email=${recipientEmail}" style="color: #ef4444; text-decoration: underline; font-weight: bold;">Unsubscribe from this list</a>
             </p>
             <p style="margin-top: 8px;">&copy; ${new Date().getFullYear()} ${storeNameUpper}. All rights reserved.</p>

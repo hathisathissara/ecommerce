@@ -88,8 +88,6 @@ export default function AdminNewsletter() {
         <h1 className="text-3xl font-bold mb-8 text-gray-800">Newsletter Manager ✉️</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* වම් පැත්ත: Send Email Campaign Form */}
           <div className="bg-white p-6 rounded-xl shadow-sm border h-fit space-y-4">
             <h2 className="text-xl font-semibold text-gray-900">Send Email Campaign</h2>
             <p className="text-xs text-gray-400">සියලුම පාරිභෝගිකයින්ට එකවර අලංකාර Updates/Offers ඊමේල් මඟින් යවන්න.</p>
