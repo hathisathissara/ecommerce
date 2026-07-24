@@ -1,5 +1,5 @@
 // src/app/api/admin/products/route.ts
-import { NextRequest, NextResponse } from "next/server"; // NextRequest import කළා
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
@@ -37,7 +37,7 @@ export async function GET() {
   }
 }
 
-// 2. POST - Create new product with SKU
+// 2. POST - Create new product
 export async function POST(req: Request) {
   try {
     await connectDB();
@@ -61,13 +61,19 @@ export async function POST(req: Request) {
       sku: sku || undefined,
       description,
       price: Number(price),
-      discountPrice: discountPrice ? Number(discountPrice) : undefined,
+      discountPrice: discountPrice ? Number(discountPrice) : null, // ⚡ හිස් නම් null ලෙස Database එකේ සේව් වේ ⚡
       stock: Number(stock),
       images,
       category,
       brand: (brand && brand !== "") ? brand : null,
       isGiftItem: Boolean(isGiftItem),
-      variants: variants || [],
+      variants: (variants || []).map((v: any) => ({
+        size: v.size,
+        price: Number(v.price),
+        discountPrice: v.discountPrice ? Number(v.discountPrice) : null, // ⚡ variants හිස් නම් null ලෙස සේව් වේ ⚡
+        stock: Number(v.stock),
+        sku: v.sku || undefined
+      })),
     });
 
     return NextResponse.json(newProduct, { status: 201 });
@@ -77,7 +83,7 @@ export async function POST(req: Request) {
   }
 }
 
-// 3. PUT - Update product with SKU
+// 3. PUT - Update product with SKU & Safe Discount Null Handling
 export async function PUT(req: Request) {
   try {
     await connectDB();
@@ -125,13 +131,19 @@ export async function PUT(req: Request) {
         sku: sku || undefined,
         description,
         price: Number(price),
-        discountPrice: discountPrice ? Number(discountPrice) : undefined,
+        discountPrice: discountPrice ? Number(discountPrice) : null, // ⚡ හිස් කළහොත් null ලෙස update වේ ⚡
         stock: Number(stock),
         images,
         category,
         brand: (brand && brand !== "") ? brand : null,
         isGiftItem: Boolean(isGiftItem),
-        variants: variants || [],
+        variants: (variants || []).map((v: any) => ({
+          size: v.size,
+          price: Number(v.price),
+          discountPrice: v.discountPrice ? Number(v.discountPrice) : null, // ⚡ variants හිස් කළහොත් null ලෙස update වේ ⚡
+          stock: Number(v.stock),
+          sku: v.sku || undefined
+        })),
       },
       { new: true }
     );
@@ -144,11 +156,10 @@ export async function PUT(req: Request) {
 }
 
 // 4. DELETE - Delete product (NextRequest භාවිතයෙන් Vercel සඳහා සුරක්ෂිත කර ඇත)
-export async function DELETE(req: NextRequest) { // NextRequest ලෙස වෙනස් කළා
+export async function DELETE(req: NextRequest) {
   try {
     await connectDB();
     
-    // Vercel Serverless සජීවීව දත්ත කියවීමේ නිවැරදිම Next.js ක්‍රමය
     const productId = req.nextUrl.searchParams.get("id");
 
     if (!productId) {
@@ -160,23 +171,21 @@ export async function DELETE(req: NextRequest) { // NextRequest ලෙස වෙ
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Cloudinary Deletion එක වෙනම try-catch එකක ලියා සයිට් එක ක්‍රෑෂ් වීම වළක්වයි
     try {
-  for (const imageUrl of product.images) {
-    const publicId = getPublicIdFromUrl(imageUrl);
-    console.log("Extracted publicId:", publicId, "from URL:", imageUrl);
-    if (publicId) {
-      const result = await cloudinary.uploader.destroy(publicId);
-      console.log("Cloudinary destroy result:", result); // { result: 'ok' } or { result: 'not found' }
-    } else {
-      console.warn("Could not extract publicId from:", imageUrl);
+      for (const imageUrl of product.images) {
+        const publicId = getPublicIdFromUrl(imageUrl);
+        console.log("Extracted publicId:", publicId, "from URL:", imageUrl);
+        if (publicId) {
+          const result = await cloudinary.uploader.destroy(publicId);
+          console.log("Cloudinary destroy result:", result);
+        } else {
+          console.warn("Could not extract publicId from:", imageUrl);
+        }
+      }
+    } catch (cloudinaryError) {
+      console.error("Cloudinary Delete Error:", cloudinaryError);
     }
-  }
-} catch (cloudinaryError) {
-  console.error("Cloudinary Delete Error:", cloudinaryError);
-}
 
-    // Database එකෙන් මකා දැමීම
     await Product.findByIdAndDelete(productId);
     return NextResponse.json({ message: "Product deleted successfully" }, { status: 200 });
 

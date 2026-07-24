@@ -59,7 +59,7 @@ export default function AdminProducts() {
   const [vSize, setVSize] = useState("");
   const [vPrice, setVPrice] = useState("");
   const [vDiscountPrice, setVDiscountPrice] = useState("");
-  const [vStock, setVStock] = useState("10");
+  const [vStock, setVStock] = useState("5");
   const [vSku, setVSku] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -115,7 +115,7 @@ export default function AdminProducts() {
     setDiscountPrice(product.discountPrice ? product.discountPrice.toString() : "");
     setStock(product.stock.toString());
     setSelectedCategory(product.category._id);
-    setSelectedBrand(product.brand ? product.brand._id : ""); // Brand එකක් නැත්නම් හිස් වේ
+    setSelectedBrand(product.brand ? product.brand._id : "");
     setIsGiftItem(product.isGiftItem);
     setExistingImages(product.images);
     
@@ -132,7 +132,6 @@ export default function AdminProducts() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Edit කරද්දී පරණ පින්තූරයක් එකින් එක ඉවත් කිරීම
   const handleRemoveExistingImage = (urlToDestroy: string) => {
     setExistingImages((prev) => prev.filter((img) => img !== urlToDestroy));
   };
@@ -217,16 +216,16 @@ export default function AdminProducts() {
           sku: sku || undefined,
           description,
           price: Number(price),
-          discountPrice: discountPrice ? Number(discountPrice) : undefined,
+          discountPrice: discountPrice ? Number(discountPrice) : null, // ⚡ හිස් කළහොත් null ලෙස සර්වර් එකට යවයි ⚡
           stock: Number(stock),
           images: finalImages,
           category: selectedCategory,
-          brand: selectedBrand ? selectedBrand : null, // ⚡ dynamic: brand එකක් නැත්නම් null ලෙස යවා CastError වළක්වයි ⚡
+          brand: selectedBrand ? selectedBrand : null,
           isGiftItem,
           variants: variants.map(v => ({
             size: v.size,
             price: Number(v.price),
-            discountPrice: v.discountPrice ? Number(v.discountPrice) : undefined,
+            discountPrice: v.discountPrice ? Number(v.discountPrice) : null, // ⚡ හිස් කළහොත් null ලෙස සර්වර් එකට යවයි ⚡
             stock: Number(v.stock),
             sku: v.sku || undefined
           })),
