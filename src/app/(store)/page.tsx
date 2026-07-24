@@ -3,20 +3,20 @@ import connectDB from "@/lib/db";
 import Category from "@/models/Category";
 import Product from "@/models/Product";
 import Banner from "@/models/Banner";
-import Review from "@/models/Review"; // <-- Review Model එක import කළා (Schema error වැළැක්වීමට)
+import Review from "@/models/Review";
 import ProductCard from "@/components/ProductCard";
 import HeroSlider from "@/components/HeroSlider";
 import NewsletterBox from "@/components/NewsletterBox";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"; // <-- Next.js Image import කළා [1]
 
 export const revalidate = 10; // සෑම තත්පර 10කට වරක්ම දත්ත Cache එකෙන් Update කරයි
 
 export default async function StoreHome() {
   await connectDB();
   
-  // Database එකෙන් දත්ත ලබාගැනීම
-  const categories = await Category.find({ isActive: true }).limit(6);
+  // Database එකෙන් සියලුම Active Categories ලබාගැනීම (.limit(6) ඉවත් කර ඇත)
+  const categories = await Category.find({ isActive: true }).sort({ createdAt: 1 });
   const activeBanners = await Banner.find({ isActive: true });
 
   // 1. 🛍️ New Arrivals: අලුතින්ම එකතු කළ අලුත්ම භාණ්ඩ 8ක් ලබාගැනීම
@@ -41,39 +41,51 @@ export default async function StoreHome() {
   const serializedNewArrivals = JSON.parse(JSON.stringify(newArrivals));
   const serializedFlashOffers = JSON.parse(JSON.stringify(flashOffers));
   const serializedBanners = JSON.parse(JSON.stringify(activeBanners));
-  const serializedTestimonials = JSON.parse(JSON.stringify(testimonials)); // Serialize reviews
+  const serializedTestimonials = JSON.parse(JSON.stringify(testimonials));
 
   return (
     <div className="pb-0 bg-white">
-      {/* Dynamic Hero Slider */}
+
       <HeroSlider banners={serializedBanners} />
 
       <div className="space-y-16 mt-10 sm:mt-16">
-        {/* Categories Grid */}
+        
+
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-xl sm:text-2xl font-black tracking-tight text-gray-950 mb-6 uppercase">
             Shop by Category 📂
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          
+
+          <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] snap-x">
             {categories.map((cat) => (
-              <Link href={`/products?category=${cat.slug}`} key={cat._id.toString()} className="group">
-                <div className="border rounded-2xl p-4 flex flex-col items-center bg-gray-50 hover:bg-gray-100 transition duration-200">
-                  <Image
-                    src={cat.image}
-                    alt={cat.name}
-                    width={80}
-                    height={80}
-                    unoptimized
-                    className="object-cover rounded-full group-hover:scale-105 transition duration-300"
-                  />
-                  <span className="mt-3 font-bold text-sm text-gray-800">{cat.name}</span>
+              <Link
+                href={`/products?category=${cat.slug}`}
+                key={cat._id.toString()}
+                className="flex-shrink-0 w-20 sm:w-24 flex flex-col items-center group snap-start"
+              >
+
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-gray-100 bg-gray-50 flex items-center justify-center hover:bg-gray-100 hover:border-gray-200 transition duration-200 overflow-hidden relative">
+
+                  <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden">
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill // <-- Image එක exact size එකට expand වීමට [1]
+                      unoptimized
+                      className="object-cover group-hover:scale-105 transition duration-300"
+                    />
+                  </div>
                 </div>
+                <span className="mt-2 font-bold text-[10px] sm:text-xs text-gray-800 text-center line-clamp-1 w-full">
+                  {cat.name}
+                </span>
               </Link>
             ))}
           </div>
         </section>
 
-        {/* ⚡ FLASH OFFERS SECTION (වට්ටම් සහිත භාණ්ඩ පමණක් පෙන්වයි) ⚡ */}
+        {/* ⚡ FLASH OFFERS SECTION ⚡ */}
         {serializedFlashOffers.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center mb-6">
@@ -96,7 +108,7 @@ export default async function StoreHome() {
           </section>
         )}
 
-        {/* 🛍️ NEW ARRIVALS SECTION (අලුත්ම භාණ්ඩ පමණක් පෙන්වයි) 🛍️ */}
+        {/* 🛍️ NEW ARRIVALS SECTION 🛍️ */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-gray-950 uppercase">
@@ -114,7 +126,7 @@ export default async function StoreHome() {
           </div>
         </section>
 
-        {/* 💬 CUSTOMER REVIEWS / TESTIMONIALS SECTION (ලස්සන පාරිභෝගික අදහස් පේළිය) 💬 */}
+        {/* Testimonials */}
         {serializedTestimonials.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100 pt-16">
             <div className="text-center mb-10">

@@ -59,7 +59,7 @@ export default function AdminProducts() {
   const [vSize, setVSize] = useState("");
   const [vPrice, setVPrice] = useState("");
   const [vDiscountPrice, setVDiscountPrice] = useState("");
-  const [vStock, setVStock] = useState("5");
+  const [vStock, setVStock] = useState("10");
   const [vSku, setVSku] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
