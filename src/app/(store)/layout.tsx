@@ -42,12 +42,12 @@ function StoreHeader({ settings }: { settings: Settings }) {
       }`}
     >
       {/* Top announcement bar */}
-      <div className="bg-gray-900 text-white text-center py-2 px-4 text-[11px] tracking-widest uppercase font-medium">
+      <div className="bg-gray-900 text-white text-center py-1.5 px-4 text-[11px] tracking-widest uppercase font-medium">
         ✨ Free Shipping on Orders Over LKR {(settings.freeDeliveryThreshold || 5000).toLocaleString()} &nbsp;|&nbsp; Premium Imports
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-16 flex items-center justify-between gap-4">
+        <div className="h-14 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             {settings.logo ? (
