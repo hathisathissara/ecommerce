@@ -111,7 +111,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               : "bg-white/90 text-gray-400 hover:text-red-400 border border-gray-100"
           }`}
         >
-          {isLiked ? "❤️" : "♡"}
+          {isLiked ? "🤍" : "♡"}
         </button>
       </Link>
 
