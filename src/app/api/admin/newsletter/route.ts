@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const storeNameUpper = storeName.toUpperCase();
 
     // dynamic විදිහට Env file එකෙන් URL එක ලබාගැනීම
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://lumosstore.vercel.app";
+ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     const emailHtml = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
