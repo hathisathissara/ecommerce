@@ -22,6 +22,7 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(true);
   const activeCategory = searchParams.get("category") || "";
 
   useEffect(() => {
@@ -53,6 +54,22 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
 
   const handlePriceApply = () => {
     applyFilters({ minPrice, maxPrice });
+  };
+
+  const PRICE_MIN = 0;
+  const PRICE_MAX = 20000;
+
+  const sliderMin = minPrice ? parseInt(minPrice, 10) : PRICE_MIN;
+  const sliderMax = maxPrice ? parseInt(maxPrice, 10) : PRICE_MAX;
+
+  const handleMinSlider = (value: number) => {
+    const clamped = Math.min(value, sliderMax - 100);
+    setMinPrice(clamped <= PRICE_MIN ? "" : String(clamped));
+  };
+
+  const handleMaxSlider = (value: number) => {
+    const clamped = Math.max(value, sliderMin + 100);
+    setMaxPrice(clamped >= PRICE_MAX ? "" : String(clamped));
   };
 
   const handleReset = () => {
@@ -104,34 +121,58 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
 
       {/* Categories */}
       <div>
-        <label className="block text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-3">
-          Category
-        </label>
-        <div className="space-y-1">
-          <button
-            onClick={() => applyFilters({ category: "" })}
-            className={`w-full text-left text-sm px-3 py-2 rounded-lg font-medium transition ${
-              !activeCategory
-                ? "bg-gray-900 text-white"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        <button
+          type="button"
+          onClick={() => setCategoryOpen((prev) => !prev)}
+          className="w-full flex items-center justify-between mb-3 group"
+        >
+          <span className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+            Category
+          </span>
+          <svg
+            className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 group-hover:text-gray-900 ${
+              categoryOpen ? "rotate-180" : "rotate-0"
             }`}
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2.5}
+            stroke="currentColor"
           >
-            All Products
-          </button>
+            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
 
-          {categories.map((cat) => (
+        <div
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            categoryOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="space-y-1">
             <button
-              key={cat._id}
-              onClick={() => applyFilters({ category: cat.slug })}
+              onClick={() => applyFilters({ category: "" })}
               className={`w-full text-left text-sm px-3 py-2 rounded-lg font-medium transition ${
-                activeCategory === cat.slug
+                !activeCategory
                   ? "bg-gray-900 text-white"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
-              {cat.name}
+              All Products
             </button>
-          ))}
+
+            {categories.map((cat) => (
+              <button
+                key={cat._id}
+                onClick={() => applyFilters({ category: cat.slug })}
+                className={`w-full text-left text-sm px-3 py-2 rounded-lg font-medium transition ${
+                  activeCategory === cat.slug
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -140,23 +181,47 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
         <label className="block text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-3">
           Price Range (LKR)
         </label>
-        <div className="space-y-2.5">
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              placeholder="Min"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900"
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-900">
+            <span>LKR {sliderMin.toLocaleString()}</span>
+            <span>LKR {sliderMax.toLocaleString()}</span>
+          </div>
+
+          <div className="relative h-5 flex items-center">
+            {/* Track */}
+            <div className="absolute w-full h-1 bg-gray-200 rounded-full" />
+            {/* Active range fill */}
+            <div
+              className="absolute h-1 bg-gray-900 rounded-full"
+              style={{
+                left: `${(sliderMin / PRICE_MAX) * 100}%`,
+                right: `${100 - (sliderMax / PRICE_MAX) * 100}%`,
+              }}
             />
+            {/* Min thumb */}
             <input
-              type="number"
-              placeholder="Max"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900"
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={100}
+              value={sliderMin}
+              onChange={(e) => handleMinSlider(Number(e.target.value))}
+              className="price-range-thumb absolute w-full appearance-none bg-transparent pointer-events-none"
+              style={{ zIndex: sliderMin > PRICE_MAX - 500 ? 5 : 3 }}
+            />
+            {/* Max thumb */}
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={100}
+              value={sliderMax}
+              onChange={(e) => handleMaxSlider(Number(e.target.value))}
+              className="price-range-thumb absolute w-full appearance-none bg-transparent pointer-events-none"
+              style={{ zIndex: 4 }}
             />
           </div>
+
           <button
             onClick={handlePriceApply}
             className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 py-2 rounded-lg text-xs font-bold transition"
@@ -164,6 +229,36 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
             Apply Price Filter
           </button>
         </div>
+
+        <style jsx>{`
+          .price-range-thumb::-webkit-slider-thumb {
+            appearance: none;
+            pointer-events: auto;
+            width: 16px;
+            height: 16px;
+            border-radius: 9999px;
+            background: #111827;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px #d1d5db;
+            cursor: pointer;
+          }
+          .price-range-thumb::-moz-range-thumb {
+            pointer-events: auto;
+            width: 16px;
+            height: 16px;
+            border-radius: 9999px;
+            background: #111827;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px #d1d5db;
+            cursor: pointer;
+          }
+          .price-range-thumb::-webkit-slider-runnable-track {
+            background: transparent;
+          }
+          .price-range-thumb::-moz-range-track {
+            background: transparent;
+          }
+        `}</style>
       </div>
     </div>
   );
