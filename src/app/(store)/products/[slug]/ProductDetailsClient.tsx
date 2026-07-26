@@ -23,16 +23,24 @@ interface ProductProps {
   product: {
     _id: string;
     name: string;
+    sku?: string; // <-- Base SKU එකතු කළා
+    shortDescription?: string; // <-- Short Description එකතු කළා
     description: string;
-    price: number;
-    discountValue?: number; // <-- discountValue එකතු කළා
-    discountType?: string;  // <-- discountType එකතු කළා
-    discountPrice?: number;
-    stock: number;
-    images: string[];
     category: { _id: string; name: string; slug: string };
+    subCategory?: string; // <-- Sub Category එකතු කළා
     brand?: { _id: string; name: string };
+    price: number;
+    discountValue?: number;
+    discountType?: string;
+    discountPrice?: number;
+    tax?: number; // <-- Tax එකතු කළා
+    stock: number;
+    lowStockAlert?: number; // <-- lowStockAlert එකතු කළා
+    stockStatus?: string; // <-- stockStatus එකතු කළා
+    barcode?: string; // <-- barcode එකතු කළා
+    trackInventory?: boolean; // <-- trackInventory එකතු කළා
     inStock: boolean;
+    images: string[];
     variants?: VariantType[];
   };
   relatedProducts: any[];
@@ -178,7 +186,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
     : null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-16">
       
       {/* 1. TOP BREADCRUMB */}
       <nav className="flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider border-b border-gray-50 pb-4">
@@ -203,7 +211,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <button
                   key={idx}
                   onClick={() => setActiveImage(img)}
-                  className={`w-20 h-20 border-2 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 transition ${activeImage === img ? "border-black scale-105" : "border-gray-100"}`}
+                  className={`w-20 h-20 border-2 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 transition ${activeImage === img ? "border-black scale-105" : "border-gray-100"}`}
                 >
                   <img src={img} alt="" className="w-full h-full object-cover" />
                 </button>
@@ -241,9 +249,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <>
                   <span className="text-2xl sm:text-3xl font-black text-gray-900">LKR {currentDiscountPrice.toLocaleString()}</span>
                   <span className="text-base sm:text-lg text-gray-400 line-through font-medium">LKR {currentPrice.toLocaleString()}</span>
-                  <span className="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full">
-                    -{discountPercentage}%
-                  </span>
                 </>
               ) : (
                 <span className="text-2xl sm:text-3xl font-black text-gray-900">LKR {currentPrice.toLocaleString()}</span>
@@ -313,7 +318,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
             {currentStock > 0 && (
               <div className="flex items-center space-x-4">
                 <span className="text-xs font-bold text-gray-400 uppercase">Quantity:</span>
-                <div className="flex items-center border rounded-xl overflow-hidden bg-gray-50">
+                <div className="flex items-center border rounded-lg overflow-hidden bg-gray-50">
                   <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="px-3 py-1.5 font-bold text-gray-600 hover:text-black hover:bg-gray-100">-</button>
                   <span className="px-4 font-semibold text-sm">{Math.min(quantity, currentStock)}</span>
                   <button onClick={() => setQuantity((q) => Math.min(currentStock, q + 1))} className="px-3 py-1.5 font-bold text-gray-600 hover:text-black hover:bg-gray-100">+</button>
