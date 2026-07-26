@@ -6,7 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import ProductCard from "@/components/ProductCard"; // Related products පෙන්වීමට
+import ProductCard from "@/components/ProductCard";
 
 interface VariantType {
   size?: string;
@@ -23,27 +23,17 @@ interface ProductProps {
   product: {
     _id: string;
     name: string;
-    sku?: string;
-    shortDescription?: string;
     description: string;
-    category: { _id: string; name: string };
-    subCategory?: string;
-    brand?: { _id: string; name: string };
     price: number;
-    discountValue: number;
-    discountType: "Percentage" | "Fixed";
     discountPrice?: number;
-    tax?: number;
     stock: number;
-    lowStockAlert: number;
-    stockStatus: string;
-    barcode?: string;
-    trackInventory: boolean;
-    inStock: boolean;
     images: string[];
+    category: { _id: string; name: string; slug: string }; // <-- slug: string එකතු කළා
+    brand?: { _id: string; name: string };
+    inStock: boolean;
     variants?: VariantType[];
   };
-  relatedProducts: any[]; // Related Products Array එක
+  relatedProducts: any[];
 }
 
 interface ReviewType {
@@ -73,6 +63,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
   // Multi-Attribute Variants (Size & Color)
   const hasVariants = product.variants && product.variants.length > 0;
+
   const availableSizes = hasVariants ? Array.from(new Set(product.variants!.map((v) => v.size).filter(Boolean))) : [];
   const availableColors = hasVariants ? Array.from(new Set(product.variants!.map((v) => v.color).filter(Boolean))) : [];
 
@@ -148,7 +139,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
     addToCart({ _id: cartId, name: cartItemName, price: currentPrice, discountPrice: currentDiscountPrice, image: product.images[0] }, quantity);
   };
 
-  // ⚡ BUY NOW: ක්ලික් කළ සැනින් Cart එකට වැටී කෙලින්ම Checkout පේජ් එකට යන බටන් එක ⚡
   const handleBuyNow = () => {
     if (quantity > currentStock) {
       alert(`Sorry, only ${currentStock} items left in stock!`);
@@ -156,7 +146,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
     }
     const { cartId, cartItemName } = getCartItemDetails();
     addToCart({ _id: cartId, name: cartItemName, price: currentPrice, discountPrice: currentDiscountPrice, image: product.images[0] }, quantity);
-    router.push("/checkout"); // කෙලින්ම checkout එකට යවයි
+    router.push("/checkout");
   };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -188,7 +178,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
       
-      {/* 1. TOP BREADCRUMB (Home > Category > Product Name) */}
+      {/* 1. TOP BREADCRUMB */}
       <nav className="flex items-center gap-2 text-xs text-gray-400 uppercase tracking-wider border-b border-gray-50 pb-4">
         <Link href="/" className="hover:text-gray-700 transition">Home</Link>
         <span>›</span>
@@ -197,10 +187,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
         <span className="text-gray-700 font-bold">{product.name}</span>
       </nav>
 
-      {/* 2. SPLIT GRID (Images Left | Details Right) */}
+      {/* 2. SPLIT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
-        {/* LEFT COLUMN: Gallery */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-5 space-y-4">
           <div className="aspect-square w-full border border-gray-100 rounded-2xl overflow-hidden bg-gray-50 relative">
             <img src={activeImage} alt={product.name} className="w-full h-full object-cover transition duration-300" />
@@ -220,20 +210,17 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
           )}
         </div>
 
-        {/* RIGHT COLUMN: Product Metadata & Actions */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
-            {/* BRAND */}
             <span className="text-xs font-black text-gray-400 uppercase tracking-widest block">
               {product.brand?.name || "Premium Brand"}
             </span>
             
-            {/* PRODUCT NAME */}
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-gray-950 leading-tight">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
               {product.name}
             </h1>
 
-            {/* RATING (Reviews preview) */}
             <div className="flex items-center space-x-2">
               <span className="text-yellow-500 text-sm">{"★".repeat(Math.round(Number(averageRating) || 5))}</span>
               <span className="text-xs font-bold text-gray-500">
@@ -241,14 +228,12 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
               </span>
             </div>
 
-            {/* SKU Badge */}
             {(selectedVariant?.sku || product.sku) && (
               <span className="inline-block text-[10px] bg-gray-900/5 text-gray-600 px-2 py-0.5 rounded font-mono font-bold">
                 SKU: {selectedVariant?.sku || product.sku}
               </span>
             )}
 
-            {/* PRICE ROW */}
             <div className="flex items-center gap-3 pt-2">
               {currentDiscountPrice ? (
                 <>
@@ -263,7 +248,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
               )}
             </div>
 
-            {/* STOCK STATUS */}
             <div>
               {currentStock > 0 ? (
                 <div className="space-y-1">
@@ -277,14 +261,12 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
               )}
             </div>
 
-            {/* SHORT DESCRIPTION */}
             {product.shortDescription && (
               <p className="text-xs sm:text-sm text-gray-500 leading-relaxed max-w-xl">
                 {product.shortDescription}
               </p>
             )}
 
-            {/* DUAL VARIANT BADGES (Size & Color Options) */}
             {hasVariants && (
               <div className="space-y-4 border-t border-b py-4 border-gray-100">
                 {availableColors.length > 0 && (
@@ -325,7 +307,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
             )}
           </div>
 
-          {/* QUANTITY & ACTIONS */}
           <div className="space-y-4 pt-4 border-t border-gray-100">
             {currentStock > 0 && (
               <div className="flex items-center space-x-4">
@@ -338,7 +319,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
               </div>
             )}
 
-            {/* Add to Cart & Buy Now Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <button
                 onClick={handleAddToCart}
@@ -357,7 +337,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
               )}
             </div>
 
-            {/* Add to Wishlist Toggle Link */}
             <button
               onClick={() => toggleWishlist({ _id: product._id, name: product.name, price: product.price, discountPrice: product.discountPrice, image: product.images[0] })}
               className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-red-500 transition"
@@ -370,16 +349,15 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
         </div>
       </div>
 
-      {/* 3. TRUST BADGES ROW (🚚 Free Shipping | 🔒 Secure Payment | ↩ Easy Returns) */}
+      {/* 3. TRUST BADGES */}
       <div className="border-t border-b py-6 border-gray-100 bg-gray-50/50 rounded-2xl flex flex-col sm:flex-row justify-around items-center gap-4 text-xs font-bold text-gray-700">
         <div className="flex items-center space-x-2"><span>🚚</span> <span>Free Shipping Island-wide</span></div>
         <div className="flex items-center space-x-2"><span>🔒</span> <span>Secure Bank Payments</span></div>
         <div className="flex items-center space-x-2"><span>↩</span> <span>Easy 7-Day Returns</span></div>
       </div>
 
-      {/* 4. INTERACTIVE TABS SECTION (Description | Specifications | Shipping | Reviews) */}
+      {/* 4. INTERACTIVE TABS */}
       <div className="space-y-6">
-        {/* Tab Buttons */}
         <div className="flex overflow-x-auto gap-6 sm:gap-10 border-b border-gray-100 pb-3 text-xs sm:text-sm font-black tracking-widest text-gray-400 uppercase">
           {["description", "specs", "shipping", "reviews"].map((tab) => (
             <button
@@ -392,7 +370,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
           ))}
         </div>
 
-        {/* Tab Contents */}
         <div className="min-h-[200px]">
           {activeTab === "description" && (
             <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line max-w-4xl animate-fade-in">
@@ -426,7 +403,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
           {activeTab === "reviews" && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 animate-fade-in">
-              {/* Write Review */}
               <div className="bg-gray-50 p-6 rounded-2xl border h-fit">
                 <h3 className="text-sm font-bold text-gray-900 mb-4">Write a Customer Review</h3>
                 <form onSubmit={handleReviewSubmit} className="space-y-4 text-xs">
@@ -454,7 +430,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 </form>
               </div>
 
-              {/* Reviews List */}
               <div className="md:col-span-2 space-y-6">
                 <h3 className="text-sm font-bold text-gray-900">Customer Reviews ({reviews.length})</h3>
                 {reviews.length === 0 ? (
@@ -479,7 +454,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
         </div>
       </div>
 
-      {/* 5. RELATED PRODUCTS SECTION */}
+      {/* 5. RELATED PRODUCTS */}
       {relatedProducts && relatedProducts.length > 0 && (
         <div className="border-t pt-12 space-y-6">
           <h2 className="text-xl sm:text-2xl font-black text-gray-950 uppercase tracking-tight">Related Products</h2>

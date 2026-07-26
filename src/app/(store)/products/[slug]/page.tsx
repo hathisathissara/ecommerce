@@ -51,21 +51,21 @@ export default async function ProductPage({
 
   await connectDB();
   
-  // 1. ප්‍රධාන Product එක ලබාගැනීම
+  // 1. ප්‍රධාන Product එක ලබාගැනීම (Category slug එකත් සමඟම Populate කරයි)
   const product = await Product.findOne({ slug })
-    .populate("category", "name")
+    .populate("category", "name slug") // <-- "name slug" ලෙස වෙනස් කළා
     .populate("brand", "name");
 
   if (!product) {
     notFound();
   }
 
-  // 2. ⚡ අදාළ Category එකේම තියෙන වෙනත් භාණ්ඩ 4ක් ලබාගැනීම (Related Products) ⚡
+  // 2. Related Products ලබාගැනීම
   const relatedProducts = await Product.find({
     category: product.category._id,
-    _id: { $ne: product._id } // වත්මන් භාණ්ඩය මඟහරියි
+    _id: { $ne: product._id }
   })
-  .populate("category", "name")
+  .populate("category", "name slug") // <-- "name slug" ලෙස වෙනස් කළා
   .populate("brand", "name")
   .limit(4);
 
@@ -75,7 +75,7 @@ export default async function ProductPage({
   return (
     <ProductDetailsClient 
       product={serializedProduct} 
-      relatedProducts={serializedRelated} // Related products දත්ත යවයි
+      relatedProducts={serializedRelated}
     />
   );
 }
