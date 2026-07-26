@@ -1,5 +1,11 @@
 // src/models/Product.ts
 import mongoose, { Schema, models } from "mongoose";
+// ⚡ Product model එක import කරන හැම තැනකම Brand/Category schema register වෙනවා
+// කියලා තහවුරු කරගන්න මේ imports දෙක දාලා තියෙන්නේ. මේකෙන් Vercel serverless
+// routes වල "Schema hasn't been registered for model Brand" error එක නවතියි.
+import "./Brand";
+import "./Category";
+
 
 const productSchema = new Schema(
   {
