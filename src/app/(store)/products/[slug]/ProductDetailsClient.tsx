@@ -7,6 +7,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import Image from "next/image"; // Next.js Image import කළා [1]
 
 interface VariantType {
   size?: string;
@@ -19,31 +20,33 @@ interface VariantType {
   sku?: string;
 }
 
+interface ProductType {
+  _id: string;
+  name: string;
+  sku?: string;
+  shortDescription?: string;
+  description: string;
+  category: { _id: string; name: string; slug: string };
+  subCategory?: string;
+  brand?: { _id: string; name: string };
+  price: number;
+  discountValue?: number;
+  discountType?: string;
+  discountPrice?: number;
+  tax?: number;
+  stock: number;
+  lowStockAlert?: number;
+  stockStatus?: string;
+  barcode?: string;
+  trackInventory?: boolean;
+  inStock: boolean;
+  images: string[];
+  variants?: VariantType[];
+}
+
 interface ProductProps {
-  product: {
-    _id: string;
-    name: string;
-    sku?: string; // <-- Base SKU එකතු කළා
-    shortDescription?: string; // <-- Short Description එකතු කළා
-    description: string;
-    category: { _id: string; name: string; slug: string };
-    subCategory?: string; // <-- Sub Category එකතු කළා
-    brand?: { _id: string; name: string };
-    price: number;
-    discountValue?: number;
-    discountType?: string;
-    discountPrice?: number;
-    tax?: number; // <-- Tax එකතු කළා
-    stock: number;
-    lowStockAlert?: number; // <-- lowStockAlert එකතු කළා
-    stockStatus?: string; // <-- stockStatus එකතු කළා
-    barcode?: string; // <-- barcode එකතු කළා
-    trackInventory?: boolean; // <-- trackInventory එකතු කළා
-    inStock: boolean;
-    images: string[];
-    variants?: VariantType[];
-  };
-  relatedProducts: any[];
+  product: ProductType;
+  relatedProducts: ProductType[]; // any වෙනුවට ProductType[] දැමුවා
 }
 
 interface ReviewType {
@@ -61,7 +64,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
 
-  // Active Information Tab (Description | Specs | Shipping | Reviews)
+  // Active Information Tab
   const [activeTab, setActiveTab] = useState<"description" | "specs" | "shipping" | "reviews">("description");
 
   // Reviews States
@@ -79,36 +82,36 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
   const [selectedSize, setSelectedSize] = useState<string>(availableSizes.length > 0 ? (availableSizes[0] as string) : "");
   const [selectedColor, setSelectedColor] = useState<string>(availableColors.length > 0 ? (availableColors[0] as string) : "");
-  const [selectedVariant, setSelectedVariant] = useState<VariantType | null>(null);
 
-  const isLiked = isInWishlist(product._id);
-
-  // Auto-select matching variant on change
-  useEffect(() => {
-    if (hasVariants) {
-      const match = product.variants!.find((v) => {
+  // ⚡ React 19 Best Practice: useEffect එකක් නැතිව සෘජුවම render cycle එකේදී variant එක ගණනය කරයි ⚡ [2]
+  const selectedVariant = hasVariants
+    ? product.variants!.find((v) => {
         const sizeMatch = selectedSize ? v.size === selectedSize : true;
         const colorMatch = selectedColor ? v.color === selectedColor : true;
         return sizeMatch && colorMatch;
-      });
-      setSelectedVariant(match || product.variants![0]);
-    }
-  }, [selectedSize, selectedColor, product._id]);
+      }) || product.variants![0]
+    : null;
 
-  const fetchReviews = async () => {
-    try {
-      const res = await fetch(`/api/reviews?productId=${product._id}`);
-      if (res.ok) setReviews(await res.json());
-    } catch (err) {
-      console.error("Failed to fetch reviews", err);
-    }
-  };
+  const isLiked = isInWishlist(product._id);
 
+  // Mongoose Product එක වෙනස් වන විට අදාළ Reviews ලෝඩ් කිරීම (Exhaustive deps ආරක්ෂිතයි)
   useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`/api/reviews?productId=${product._id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setReviews(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch reviews", err);
+      }
+    };
+
     fetchReviews();
     setActiveImage(product.images[0]);
     setQuantity(1);
-  }, [product._id]);
+  }, [product._id, product.images]);
 
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
   const currentDiscountPrice = selectedVariant ? selectedVariant.discountPrice : product.discountPrice;
@@ -125,7 +128,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
     : 0;
 
   const getCartItemDetails = () => {
-    let variantDetails = [];
+    const variantDetails = []; // let වෙනුවට const දැමුවා
     if (selectedVariant?.size) variantDetails.push(selectedVariant.size);
     if (selectedVariant?.color) variantDetails.push(selectedVariant.color);
     
@@ -200,10 +203,17 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
       {/* 2. SPLIT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
-        {/* LEFT COLUMN */}
+        {/* LEFT COLUMN (Next.js Image Component වලින් සජීවීව සකසා ඇත) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="aspect-square w-full border border-gray-100 rounded-2xl overflow-hidden bg-gray-50 relative">
-            <img src={activeImage} alt={product.name} className="w-full h-full object-cover transition duration-300" />
+            <Image 
+              src={activeImage} 
+              alt={product.name} 
+              fill 
+              priority 
+              unoptimized 
+              className="object-cover transition duration-300" 
+            />
           </div>
           {product.images.length > 1 && (
             <div className="flex gap-3 overflow-x-auto pb-2">
@@ -211,9 +221,9 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <button
                   key={idx}
                   onClick={() => setActiveImage(img)}
-                  className={`w-20 h-20 border-2 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 transition ${activeImage === img ? "border-black scale-105" : "border-gray-100"}`}
+                  className={`w-16 h-16 border-2 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 transition relative ${activeImage === img ? "border-black scale-105" : "border-gray-100"}`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <Image src={img} alt="" fill unoptimized className="object-cover" />
                 </button>
               ))}
             </div>
@@ -249,6 +259,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <>
                   <span className="text-2xl sm:text-3xl font-black text-gray-900">LKR {currentDiscountPrice.toLocaleString()}</span>
                   <span className="text-base sm:text-lg text-gray-400 line-through font-medium">LKR {currentPrice.toLocaleString()}</span>
+                  {discountPercentage > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full">
+                      -{discountPercentage}%
+                    </span>
+                  )}
                 </>
               ) : (
                 <span className="text-2xl sm:text-3xl font-black text-gray-900">LKR {currentPrice.toLocaleString()}</span>
@@ -318,7 +333,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
             {currentStock > 0 && (
               <div className="flex items-center space-x-4">
                 <span className="text-xs font-bold text-gray-400 uppercase">Quantity:</span>
-                <div className="flex items-center border rounded-lg overflow-hidden bg-gray-50">
+                <div className="flex items-center border rounded-xl overflow-hidden bg-gray-50">
                   <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="px-3 py-1.5 font-bold text-gray-600 hover:text-black hover:bg-gray-100">-</button>
                   <span className="px-4 font-semibold text-sm">{Math.min(quantity, currentStock)}</span>
                   <button onClick={() => setQuantity((q) => Math.min(currentStock, q + 1))} className="px-3 py-1.5 font-bold text-gray-600 hover:text-black hover:bg-gray-100">+</button>
@@ -415,7 +430,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <form onSubmit={handleReviewSubmit} className="space-y-4 text-xs">
                   <div>
                     <label className="block text-xs font-semibold mb-1">Your Name</label>
-                    <input type="text" value={revName} onChange={(e) => setRevName(e.target.value)} required placeholder="e.g. John Doe" className="w-full p-2.5 border rounded-lg outline-none bg-white focus:ring-1 focus:ring-black" />
+                    <input type="text" value={revName} onChange={(e) => setRevName(setRevName as any)} required placeholder="e.g. John Doe" className="w-full p-2.5 border rounded-lg outline-none bg-white focus:ring-1 focus:ring-black" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1">Rating (Stars)</label>
@@ -450,7 +465,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                           <span className="text-xs text-gray-400">{new Date(rev.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="text-xs text-yellow-500 mt-1">{"★".repeat(rev.rating)}</div>
-                        <p className="text-xs text-gray-600 mt-2 italic">"{rev.comment}"</p>
+                        <p className="text-xs text-gray-600 mt-2 italic">&quot;{rev.comment}&quot;</p> {/* Escaped double quotes [1] */}
                       </div>
                     ))}
                   </div>
@@ -466,7 +481,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
         <div className="border-t pt-12 space-y-6">
           <h2 className="text-xl sm:text-2xl font-black text-gray-950 uppercase tracking-tight">Related Products</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((prod: any) => (
+            {relatedProducts.map((prod: ProductType) => ( // any වෙනුවට ProductType දැමුවා
               <ProductCard key={prod._id} product={prod} />
             ))}
           </div>
