@@ -485,7 +485,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
           <h2 className="text-xl sm:text-2xl font-black text-gray-950 uppercase tracking-tight">Related Products</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {relatedProducts.map((prod: ProductType) => ( // any වෙනුවට ProductType දැමුවා
-              <ProductCard key={prod._id} product={prod} />
+              <ProductCard
+                key={prod._id}
+                product={{
+                  ...prod,
+                  variants: prod.variants?.map((v) => ({
+                    ...v,
+                    size: v.size || "",
+                  })),
+                }}
+              />
             ))}
           </div>
         </div>
