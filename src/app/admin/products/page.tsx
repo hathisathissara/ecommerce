@@ -84,7 +84,7 @@ export default function AdminProducts() {
   const [imageFiles, setImageFiles] = useState<FileList | null>(null);
   const [isGiftItem, setIsGiftItem] = useState(false);
 
-  // Pop-up Modal Open/Close State (Modal පාලනයට)
+  // Pop-up Modal Open/Close State
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Search, Loading, Editing
@@ -126,7 +126,6 @@ export default function AdminProducts() {
     setVariants(variants.filter((_, i) => i !== idx));
   };
 
-  // Edit බටන් එක එබූ විට Modal එක පිරී Open වේ
   const handleEditClick = (product: ProductType) => {
     setIsEditing(true);
     setEditingProductId(product._id);
@@ -172,7 +171,12 @@ export default function AdminProducts() {
     setExistingImages(product.images);
     
     setError("");
-    setIsModalOpen(true); // Modal එක ඕපන් කරයි
+    setIsModalOpen(true);
+  };
+
+  // ⚡ අතුරුදහන් වී තිබූ handleRemoveExistingImage function එක මෙතැනට ඇතුලත් කරන ලදී ⚡
+  const handleRemoveExistingImage = (urlToDestroy: string) => {
+    setExistingImages((prev) => prev.filter((img) => img !== urlToDestroy));
   };
 
   const handleCancelEdit = () => {
@@ -186,7 +190,7 @@ export default function AdminProducts() {
     setVariants([]); setVSize(""); setVColor(""); setVPrice(""); setVDiscountValue(""); setVDiscountType("Percentage"); setVStock("5"); setVSku("");
     setImageFiles(null); setIsGiftItem(false); setExistingImages([]);
     setError("");
-    setIsModalOpen(false); // Modal එක වසයි
+    setIsModalOpen(false);
     const fileInput = document.getElementById("product-images") as HTMLInputElement;
     if (fileInput) fileInput.value = "";
   };
@@ -306,7 +310,7 @@ export default function AdminProducts() {
           <p className="text-xs sm:text-sm text-gray-500 mt-1">Configure catalogs, dynamic variants, prices, and stock inventory.</p>
         </div>
         
-        {/* ➕ Add New Product Button */}
+        {/* Add New Product Button */}
         <button
           onClick={() => { handleCancelEdit(); setIsModalOpen(true); }}
           className="bg-black text-white px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition duration-200 shadow-sm flex items-center gap-2"
@@ -315,14 +319,13 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      {/* ⚡ WIDE POP-UP MODAL (Add / Edit Form) ⚡ */}
+      {/* Pop-up Modal (Add / Edit Form) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          {/* Close on backdrop click */}
           <div className="absolute inset-0 cursor-pointer" onClick={handleCancelEdit} />
 
           {/* Modal Container */}
-          <div className="bg-white w-full max-w-4xl h-[90vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative z-10 animate-fade-in">
+          <div className="bg-white w-full max-w-4xl h-[90vh] rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative z-10">
             {/* Modal Header */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <div>
@@ -514,7 +517,7 @@ export default function AdminProducts() {
                   </button>
 
                   {variants.length > 0 && (
-                    <div className="bg-gray-50 p-3 rounded-xl border space-y-2 max-h-40 overflow-y-auto">
+                    <div className="bg-gray-50/50 p-3 rounded-xl border border-gray-100 space-y-2 max-h-40 overflow-y-auto">
                       {variants.map((v, idx) => (
                         <div key={idx} className="flex justify-between items-center text-xs text-gray-600 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
                           <div>
@@ -535,19 +538,19 @@ export default function AdminProducts() {
               <button id="modal-submit-btn" type="submit" className="hidden" />
             </form>
 
-            {/* Modal Footer (Sticky bottom buttons) */}
+            {/* Modal Footer */}
             <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className="border border-gray-200 text-gray-700 px-6 py-3 rounded-xl text-xs font-bold hover:bg-gray-100 transition"
+                className="border border-gray-200 text-gray-700 px-6 py-3 rounded-xl text-xs font-bold hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => document.getElementById("modal-submit-btn")?.click()}
                 disabled={loading}
-                className="bg-black text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition disabled:opacity-60"
+                className="bg-black text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition"
               >
                 {loading ? "Saving..." : isEditing ? "Update Product" : "Add Product"}
               </button>
@@ -563,13 +566,7 @@ export default function AdminProducts() {
             <h2 className="text-base sm:text-lg font-black text-gray-900">Products Inventory ({filteredProducts.length})</h2>
             <p className="text-xs text-gray-400 mt-1">Review catalog items, prices, and stock statuses.</p>
           </div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search Name, Category or SKU..."
-            className="px-4 py-2.5 border border-gray-200 rounded-xl text-xs outline-none focus:ring-1 focus:ring-gray-900 w-full sm:w-64 bg-white text-gray-900"
-          />
+          <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search Name, Category or SKU..." className="px-4 py-2.5 border rounded-xl text-xs outline-none focus:ring-1 focus:ring-gray-900 w-full sm:w-64 bg-white text-gray-900" />
         </div>
 
         {filteredProducts.length === 0 ? (
