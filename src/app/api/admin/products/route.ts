@@ -23,6 +23,15 @@ const getPublicIdFromUrl = (url: string) => {
   }
 };
 
+// වට්ටම් මිල ගණනය කරන පොදු Helper එක (Percentage vs Fixed)
+const calculateDiscountPrice = (price: number, val: number, type: string) => {
+  if (!val || val <= 0) return null;
+  if (type === "Percentage") {
+    return Math.round(price - (price * val) / 100);
+  }
+  return price - val;
+};
+
 // 1. GET - Fetch all products
 export async function GET() {
   try {
@@ -42,9 +51,14 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { name, sku, description, price, discountPrice, stock, images, category, brand, isGiftItem, variants } = body;
+    const { 
+      name, sku, shortDescription, description, category, subCategory, brand, tags,
+      price, discountValue, discountType, tax,
+      stock, lowStockAlert, stockStatus, barcode, trackInventory,
+      variants, images, isGiftItem 
+    } = body;
 
-    if (!name || !description || !price || !images || images.length === 0 || !category || !stock) {
+    if (!name || !description || !price || !images || images.length === 0 || !category || stock === undefined) {
       return NextResponse.json({ error: "All required fields must be filled" }, { status: 400 });
     }
 
@@ -55,23 +69,40 @@ export async function POST(req: Request) {
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
+    // Base discount price ගණනය කිරීම
+    const baseDiscountPrice = calculateDiscountPrice(Number(price), Number(discountValue), discountType);
+
     const newProduct = await Product.create({
       name,
       slug,
       sku: sku || undefined,
+      shortDescription,
       description,
-      price: Number(price),
-      discountPrice: discountPrice ? Number(discountPrice) : null, // ⚡ හිස් නම් null ලෙස Database එකේ සේව් වේ ⚡
-      stock: Number(stock),
-      images,
       category,
+      subCategory: subCategory || undefined,
       brand: (brand && brand !== "") ? brand : null,
+      tags: tags || [],
+      price: Number(price),
+      discountValue: Number(discountValue),
+      discountType,
+      discountPrice: baseDiscountPrice,
+      tax: tax ? Number(tax) : 0,
+      stock: Number(stock),
+      lowStockAlert: lowStockAlert ? Number(lowStockAlert) : 5,
+      stockStatus,
+      barcode: barcode || undefined,
+      trackInventory: Boolean(trackInventory),
       isGiftItem: Boolean(isGiftItem),
+      images,
+      // Variants වල Discount pricesද ඔටෝම ගණනය කර සේව් කරයි
       variants: (variants || []).map((v: any) => ({
-        size: v.size,
+        size: v.size || undefined,
+        color: v.color || undefined,
         price: Number(v.price),
-        discountPrice: v.discountPrice ? Number(v.discountPrice) : null, // ⚡ variants හිස් නම් null ලෙස සේව් වේ ⚡
-        stock: Number(v.stock),
+        discountValue: Number(v.discountValue || 0),
+        discountType: v.discountType || "Percentage",
+        discountPrice: calculateDiscountPrice(Number(v.price), Number(v.discountValue), v.discountType || "Percentage"),
+        stock: Number(v.stock || 0),
         sku: v.sku || undefined
       })),
     });
@@ -83,14 +114,19 @@ export async function POST(req: Request) {
   }
 }
 
-// 3. PUT - Update product with SKU & Safe Discount Null Handling
+// 3. PUT - Update product
 export async function PUT(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { productId, name, sku, description, price, discountPrice, stock, images, category, brand, isGiftItem, variants } = body;
+    const { 
+      productId, name, sku, shortDescription, description, category, subCategory, brand, tags,
+      price, discountValue, discountType, tax,
+      stock, lowStockAlert, stockStatus, barcode, trackInventory,
+      variants, images, isGiftItem 
+    } = body;
 
-    if (!productId || !name || !description || !price || !category || !stock) {
+    if (!productId || !name || !description || !price || !category || stock === undefined) {
       return NextResponse.json({ error: "Required fields are missing" }, { status: 400 });
     }
 
@@ -109,19 +145,19 @@ export async function PUT(req: Request) {
     // Delete removed images from Cloudinary
     const oldImages = product.images || [];
     const imagesToDelete = oldImages.filter((img: string) => !images.includes(img));
-    
     if (imagesToDelete.length > 0) {
       try {
         for (const imageUrl of imagesToDelete) {
           const publicId = getPublicIdFromUrl(imageUrl);
-          if (publicId) {
-            await cloudinary.uploader.destroy(publicId);
-          }
+          if (publicId) await cloudinary.uploader.destroy(publicId);
         }
       } catch (cloudinaryError) {
         console.error("Cloudinary Delete Error on Update:", cloudinaryError);
       }
     }
+
+    // Base discount price ගණනය කිරීම
+    const baseDiscountPrice = calculateDiscountPrice(Number(price), Number(discountValue), discountType);
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -129,19 +165,32 @@ export async function PUT(req: Request) {
         name,
         slug,
         sku: sku || undefined,
+        shortDescription,
         description,
-        price: Number(price),
-        discountPrice: discountPrice ? Number(discountPrice) : null, // ⚡ හිස් කළහොත් null ලෙස update වේ ⚡
-        stock: Number(stock),
-        images,
         category,
+        subCategory: subCategory || undefined,
         brand: (brand && brand !== "") ? brand : null,
+        tags: tags || [],
+        price: Number(price),
+        discountValue: Number(discountValue),
+        discountType,
+        discountPrice: baseDiscountPrice,
+        tax: tax ? Number(tax) : 0,
+        stock: Number(stock),
+        lowStockAlert: lowStockAlert ? Number(lowStockAlert) : 5,
+        stockStatus,
+        barcode: barcode || undefined,
+        trackInventory: Boolean(trackInventory),
         isGiftItem: Boolean(isGiftItem),
+        images,
         variants: (variants || []).map((v: any) => ({
-          size: v.size,
+          size: v.size || undefined,
+          color: v.color || undefined,
           price: Number(v.price),
-          discountPrice: v.discountPrice ? Number(v.discountPrice) : null, // ⚡ variants හිස් කළහොත් null ලෙස update වේ ⚡
-          stock: Number(v.stock),
+          discountValue: Number(v.discountValue || 0),
+          discountType: v.discountType || "Percentage",
+          discountPrice: calculateDiscountPrice(Number(v.price), Number(v.discountValue), v.discountType || "Percentage"),
+          stock: Number(v.stock || 0),
           sku: v.sku || undefined
         })),
       },
@@ -155,11 +204,10 @@ export async function PUT(req: Request) {
   }
 }
 
-// 4. DELETE - Delete product (NextRequest භාවිතයෙන් Vercel සඳහා සුරක්ෂිත කර ඇත)
+// 4. DELETE - Delete product
 export async function DELETE(req: NextRequest) {
   try {
     await connectDB();
-    
     const productId = req.nextUrl.searchParams.get("id");
 
     if (!productId) {
@@ -174,13 +222,7 @@ export async function DELETE(req: NextRequest) {
     try {
       for (const imageUrl of product.images) {
         const publicId = getPublicIdFromUrl(imageUrl);
-        console.log("Extracted publicId:", publicId, "from URL:", imageUrl);
-        if (publicId) {
-          const result = await cloudinary.uploader.destroy(publicId);
-          console.log("Cloudinary destroy result:", result);
-        } else {
-          console.warn("Could not extract publicId from:", imageUrl);
-        }
+        if (publicId) await cloudinary.uploader.destroy(publicId);
       }
     } catch (cloudinaryError) {
       console.error("Cloudinary Delete Error:", cloudinaryError);
@@ -188,7 +230,6 @@ export async function DELETE(req: NextRequest) {
 
     await Product.findByIdAndDelete(productId);
     return NextResponse.json({ message: "Product deleted successfully" }, { status: 200 });
-
   } catch (error) {
     console.error("Failed to delete product:", error);
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });

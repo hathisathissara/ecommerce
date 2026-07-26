@@ -1,42 +1,38 @@
 // src/app/(store)/products/[slug]/page.tsx
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
-import "@/models/Brand";
+import Brand from "@/models/Brand";
+import Category from "@/models/Category";
 import { notFound } from "next/navigation";
 import ProductDetailsClient from "./ProductDetailsClient";
-import type { Metadata } from "next"; // <-- Metadata Type එක import කළා
+import type { Metadata } from "next";
 
-// ⚡ SEO සඳහා DYNAMIC METADATA GENERATOR (Next.js 15) ⚡
+// SEO සඳහා Dynamic Metadata
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params; // Next.js 15 වල params await කළ යුතුය
+  const { slug } = await params;
 
   await connectDB();
   const product = await Product.findOne({ slug });
 
   if (!product) {
-    return {
-      title: "Product Not Found",
-    };
+    return { title: "Product Not Found" };
   }
 
-  // Google සෙවුම් සඳහා Description එක අකුරු 160කට සීමා කිරීම (Best practice)
-  const shortDescription = product.description.substring(0, 160) + "...";
+  const shortDescription = product.shortDescription || product.description.substring(0, 160) + "...";
 
   return {
-    title: product.name, // Browser Tab එකේ Product එකේ නම පෙන්වයි
+    title: product.name,
     description: shortDescription,
-    
-    // මෙම Product ලින්ක් එක WhatsApp/Facebook Share කරද්දී පින්තූරය සමඟ ලස්සනට පෙන්වීමට
     openGraph: {
       title: `${product.name} | The Store`,
       description: shortDescription,
       images: [
         {
-          url: product.images[0], // Product එකේ පළමු පින්තූරය Share preview එකට ඔටෝම වැටේ!
+          url: product.images[0],
           width: 800,
           height: 800,
         },
@@ -54,6 +50,8 @@ export default async function ProductPage({
   const { slug } = await params;
 
   await connectDB();
+  
+  // 1. ප්‍රධාන Product එක ලබාගැනීම
   const product = await Product.findOne({ slug })
     .populate("category", "name")
     .populate("brand", "name");
@@ -62,7 +60,22 @@ export default async function ProductPage({
     notFound();
   }
 
-  const serializedProduct = JSON.parse(JSON.stringify(product));
+  // 2. ⚡ අදාළ Category එකේම තියෙන වෙනත් භාණ්ඩ 4ක් ලබාගැනීම (Related Products) ⚡
+  const relatedProducts = await Product.find({
+    category: product.category._id,
+    _id: { $ne: product._id } // වත්මන් භාණ්ඩය මඟහරියි
+  })
+  .populate("category", "name")
+  .populate("brand", "name")
+  .limit(4);
 
-  return <ProductDetailsClient key={serializedProduct._id} product={serializedProduct} />;
+  const serializedProduct = JSON.parse(JSON.stringify(product));
+  const serializedRelated = JSON.parse(JSON.stringify(relatedProducts));
+
+  return (
+    <ProductDetailsClient 
+      product={serializedProduct} 
+      relatedProducts={serializedRelated} // Related products දත්ත යවයි
+    />
+  );
 }

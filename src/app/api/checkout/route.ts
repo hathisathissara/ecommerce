@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
-import Product from "@/models/Product"; // <-- Product Model එක import කළා
-import { sendOrderEmail } from "@/lib/email"; // <-- Email Utility එක import කළා
+import Product from "@/models/Product";
+import { sendOrderEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -31,20 +31,27 @@ export async function POST(req: Request) {
       shippingFee: shippingFee ? Number(shippingFee) : 0,
     });
 
-    // 2. ⚡ ඇණවුම සාර්ථක වූ පසු ඔටෝම Stock ප්‍රමාණයන් අඩු කිරීමේ Logic එක (ඔබ සකසන ලද Bug-free ක්‍රමය) ⚡
+    // 2. ⚡ ඇණවුම සාර්ථක වූ පසු ඔටෝම සැබෑ Stock ප්‍රමාණයන් අඩු කිරීමේ Logic එක ⚡
     for (const item of items) {
-      // Skip stock update for virtual custom gift boxes to prevent CastError
+      // Custom Gift Boxes වල IDs සෘජුව MongoDB ObjectIDs නොවන නිසා ඒවායේ stock update එක skip කරයි
       if (item._id.startsWith("gift-box-") || item._id.startsWith("custom-gift-")) {
         continue;
       }
 
-      // ප්‍රභේදයක් (Variant) මිලදී ගෙන තිබේ නම් (e.g. ID එකෙහි - සලකුණක් ඇත)
+      // ප්‍රභේදයක් (Variant: Size + Color) මිලදී ගෙන තිබේ නම් (e.g. ID එකෙහි - සලකුණක් ඇත)
       if (item._id.includes("-")) {
-        const [prodId, size] = item._id.split("-");
-        
-        // අදාළ Variant size එකට අදාළව තොග ප්‍රමාණය අඩු කරයි
+        const parts = item._id.split("-");
+        const prodId = parts[0];
+        const size = parts[1] || undefined;
+        const color = parts[2] || undefined;
+
+        // dynamic query: size සහ color දෙකම ඇති variant එක සොයා එහි stock එක අඩු කරයි
         await Product.updateOne(
-          { _id: prodId, "variants.size": size },
+          { 
+            _id: prodId, 
+            "variants.size": size,
+            "variants.color": color 
+          },
           { $inc: { "variants.$.stock": -item.quantity } }
         );
       } else {
@@ -56,11 +63,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. ⚡ ස්වයංක්‍රීයව EMAIL INVOICE යැවීම ⚡
+    // 3. ස්වයංක්‍රීයව EMAIL INVOICE යැවීම
     try {
       await sendOrderEmail(newOrder);
     } catch (emailError) {
-      // Email එක යැවීමේදී යම් ගැටලුවක් ආවොත් checkout එක හිරවෙන්නේ නැතුව සේව් වේ
       console.error("Order Email failed to send:", emailError);
     }
 
