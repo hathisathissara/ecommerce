@@ -94,23 +94,25 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
   const isLiked = isInWishlist(product._id);
 
+  // Component scope එකේම fetchReviews තියෙන නිසා handleReviewSubmit එකෙනුත් call කරන්න පුළුවන්
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`/api/reviews?productId=${product._id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch reviews", err);
+    }
+  };
+
   // Mongoose Product එක වෙනස් වන විට අදාළ Reviews ලෝඩ් කිරීම (Exhaustive deps ආරක්ෂිතයි)
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const res = await fetch(`/api/reviews?productId=${product._id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setReviews(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch reviews", err);
-      }
-    };
-
     fetchReviews();
     setActiveImage(product.images[0]);
     setQuantity(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product._id, product.images]);
 
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
