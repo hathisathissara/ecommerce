@@ -73,7 +73,7 @@ A full-stack e-commerce web application built with **Next.js 16**, **MongoDB**, 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/ecommerce.git
+git clone https://github.com/hathisathissara/ecommerce.git
 cd ecommerce
 ```
 
