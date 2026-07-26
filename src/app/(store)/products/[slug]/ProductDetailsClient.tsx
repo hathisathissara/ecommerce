@@ -23,6 +23,7 @@ interface VariantType {
 interface ProductType {
   _id: string;
   name: string;
+  slug: string;
   sku?: string;
   shortDescription?: string;
   description: string;
