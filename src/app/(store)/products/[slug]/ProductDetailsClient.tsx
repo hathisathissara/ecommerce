@@ -25,10 +25,12 @@ interface ProductProps {
     name: string;
     description: string;
     price: number;
+    discountValue?: number; // <-- discountValue එකතු කළා
+    discountType?: string;  // <-- discountType එකතු කළා
     discountPrice?: number;
     stock: number;
     images: string[];
-    category: { _id: string; name: string; slug: string }; // <-- slug: string එකතු කළා
+    category: { _id: string; name: string; slug: string };
     brand?: { _id: string; name: string };
     inStock: boolean;
     variants?: VariantType[];
@@ -105,8 +107,8 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
   const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
 
   // Discount Percentage ගණනය කිරීම
-  const activeDiscountValue = selectedVariant ? (selectedVariant.discountValue || 0) : product.discountValue;
-  const activeDiscountType = selectedVariant ? (selectedVariant.discountType || "Percentage") : product.discountType;
+  const activeDiscountValue = selectedVariant ? (selectedVariant.discountValue || 0) : (product.discountValue || 0);
+  const activeDiscountType = selectedVariant ? (selectedVariant.discountType || "Percentage") : (product.discountType || "Percentage");
   
   const discountPercentage = activeDiscountValue > 0 
     ? activeDiscountType === "Percentage" 
@@ -201,7 +203,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <button
                   key={idx}
                   onClick={() => setActiveImage(img)}
-                  className={`w-16 h-16 border-2 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 transition ${activeImage === img ? "border-black scale-105" : "border-gray-100"}`}
+                  className={`w-20 h-20 border-2 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 transition ${activeImage === img ? "border-black scale-105" : "border-gray-100"}`}
                 >
                   <img src={img} alt="" className="w-full h-full object-cover" />
                 </button>
