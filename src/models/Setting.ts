@@ -5,8 +5,10 @@ const settingSchema = new Schema(
   {
     storeName: { type: String, default: "The Store" },
     logo: { type: String, default: "" }, // <-- dynamic logo එක සඳහා Cloudinary Image URL එක
+    favicon: { type: String, default: "" },
     contactEmail: { type: String, default: "info@thestore.com" },
     contactPhone: { type: String, default: "0771234567" },
+    whatsappNumber: { type: String, default: "94771234567" },
     contactAddress: { type: String, default: "Colombo, Sri Lanka" },
     
     bankName: { type: String, default: "Commercial Bank" },

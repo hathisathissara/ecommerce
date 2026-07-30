@@ -156,9 +156,12 @@ export default function AdminBanners() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
                 Banner Image {isEditing ? "(Optional)" : "*"}
               </label>
+              <p className="text-[10px] text-blue-500 mb-2 font-semibold">
+                * Please upload a banner of exact size 1920 × 800 px for best display results.
+              </p>
               <input
                 id="banner-image"
                 type="file"

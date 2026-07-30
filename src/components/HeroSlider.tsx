@@ -31,11 +31,11 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
 
   if (banners.length === 0) {
     return (
-      <section className="relative bg-gray-100 py-24 sm:py-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <section className="relative bg-gray-100 aspect-[1920/800] flex items-center overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-8 sm:py-0">
           <div className="max-w-xl">
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-none">Elevate Your Senses ✨</h1>
-            <p className="mt-4 text-lg text-gray-600">Explore our premium collection of imported luxury perfumes and cosmetics.</p>
+            <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900 leading-none">Elevate Your Senses ✨</h1>
+            <p className="mt-2 sm:mt-4 text-xs sm:text-base md:text-lg text-gray-600">Explore our premium collection of imported luxury perfumes and cosmetics.</p>
           </div>
         </div>
       </section>
@@ -52,7 +52,7 @@ export default function HeroSlider({ banners }: HeroSliderProps) {
     : {};
 
   return (
-    <div className="relative w-full aspect-[3/2] sm:aspect-[21/8] max-h-[560px] overflow-hidden bg-gray-950">
+    <div className="relative w-full aspect-[1920/800] overflow-hidden bg-gray-950">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}

@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface CategoryType {
   _id: string;
@@ -18,21 +18,16 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
-  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+  const currentSearch = searchParams.get("search") || "";
+  const [search, setSearch] = useState(currentSearch);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(true);
   const activeCategory = searchParams.get("category") || "";
 
-  useEffect(() => {
-    const init = () => {
-      setSearch(searchParams.get("search") || "");
-      setMinPrice(searchParams.get("minPrice") || "");
-      setMaxPrice(searchParams.get("maxPrice") || "");
-    };
-    init();
-  }, [searchParams]);
+  // Sync local search state when URL search param changes externally
+  if (search !== currentSearch && document.activeElement?.id !== "sidebar-search-input") {
+    setSearch(currentSearch);
+  }
 
   const applyFilters = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -52,35 +47,13 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
     applyFilters({ search });
   };
 
-  const handlePriceApply = () => {
-    applyFilters({ minPrice, maxPrice });
-  };
-
-  const PRICE_MIN = 0;
-  const PRICE_MAX = 20000;
-
-  const sliderMin = minPrice ? parseInt(minPrice, 10) : PRICE_MIN;
-  const sliderMax = maxPrice ? parseInt(maxPrice, 10) : PRICE_MAX;
-
-  const handleMinSlider = (value: number) => {
-    const clamped = Math.min(value, sliderMax - 100);
-    setMinPrice(clamped <= PRICE_MIN ? "" : String(clamped));
-  };
-
-  const handleMaxSlider = (value: number) => {
-    const clamped = Math.max(value, sliderMin + 100);
-    setMaxPrice(clamped >= PRICE_MAX ? "" : String(clamped));
-  };
-
   const handleReset = () => {
     setSearch("");
-    setMinPrice("");
-    setMaxPrice("");
     router.push("/products");
     setMobileOpen(false);
   };
 
-  const hasActiveFilters = !!(activeCategory || search || minPrice || maxPrice);
+  const hasActiveFilters = !!(activeCategory || search);
 
   const filterContent = (
     <div className="space-y-6">
@@ -174,91 +147,6 @@ export default function FilterSidebar({ categories }: FilterSidebarProps) {
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Price Range */}
-      <div className="border-t border-gray-100 pt-5">
-        <label className="block text-[10px] font-bold tracking-widest text-gray-500 uppercase mb-3">
-          Price Range (LKR)
-        </label>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs font-bold text-gray-900">
-            <span>LKR {sliderMin.toLocaleString()}</span>
-            <span>LKR {sliderMax.toLocaleString()}</span>
-          </div>
-
-          <div className="relative h-5 flex items-center">
-            {/* Track */}
-            <div className="absolute w-full h-1 bg-gray-200 rounded-full" />
-            {/* Active range fill */}
-            <div
-              className="absolute h-1 bg-gray-900 rounded-full"
-              style={{
-                left: `${(sliderMin / PRICE_MAX) * 100}%`,
-                right: `${100 - (sliderMax / PRICE_MAX) * 100}%`,
-              }}
-            />
-            {/* Min thumb */}
-            <input
-              type="range"
-              min={PRICE_MIN}
-              max={PRICE_MAX}
-              step={100}
-              value={sliderMin}
-              onChange={(e) => handleMinSlider(Number(e.target.value))}
-              className="price-range-thumb absolute w-full appearance-none bg-transparent pointer-events-none"
-              style={{ zIndex: sliderMin > PRICE_MAX - 500 ? 5 : 3 }}
-            />
-            {/* Max thumb */}
-            <input
-              type="range"
-              min={PRICE_MIN}
-              max={PRICE_MAX}
-              step={100}
-              value={sliderMax}
-              onChange={(e) => handleMaxSlider(Number(e.target.value))}
-              className="price-range-thumb absolute w-full appearance-none bg-transparent pointer-events-none"
-              style={{ zIndex: 4 }}
-            />
-          </div>
-
-          <button
-            onClick={handlePriceApply}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 py-2 rounded-lg text-xs font-bold transition"
-          >
-            Apply Price Filter
-          </button>
-        </div>
-
-        <style jsx>{`
-          .price-range-thumb::-webkit-slider-thumb {
-            appearance: none;
-            pointer-events: auto;
-            width: 16px;
-            height: 16px;
-            border-radius: 9999px;
-            background: #111827;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 0 1px #d1d5db;
-            cursor: pointer;
-          }
-          .price-range-thumb::-moz-range-thumb {
-            pointer-events: auto;
-            width: 16px;
-            height: 16px;
-            border-radius: 9999px;
-            background: #111827;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 0 1px #d1d5db;
-            cursor: pointer;
-          }
-          .price-range-thumb::-webkit-slider-runnable-track {
-            background: transparent;
-          }
-          .price-range-thumb::-moz-range-track {
-            background: transparent;
-          }
-        `}</style>
       </div>
     </div>
   );

@@ -40,19 +40,24 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { logo } = body; // අලුතින් ලැබෙන Logo URL එක
+    const { logo, favicon } = body; // අලුතින් ලැබෙන Logo/Favicon URLs
 
     let settings = await Setting.findOne();
 
     if (!settings) {
       settings = await Setting.create(body);
     } else {
-      // ⚡ CLOUDINARY LOGO CLEANUP LOGIC ⚡
-      // අලුතින් Logo එකක් ලැබී තිබේ නම් සහ එය කලින් තිබුණු Logo එකට වඩා වෙනස් නම් පමණක් පරණ එක මකා දමයි
+      // ⚡ CLOUDINARY LOGO/FAVICON CLEANUP LOGIC ⚡
       if (logo && settings.logo && settings.logo !== logo) {
         const oldPublicId = getPublicIdFromUrl(settings.logo);
         if (oldPublicId) {
-          await cloudinary.uploader.destroy(oldPublicId); // පරණ Logo එක Cloudinary එකෙන් ඩිලීට් වේ
+          await cloudinary.uploader.destroy(oldPublicId);
+        }
+      }
+      if (favicon && settings.favicon && settings.favicon !== favicon) {
+        const oldPublicId = getPublicIdFromUrl(settings.favicon);
+        if (oldPublicId) {
+          await cloudinary.uploader.destroy(oldPublicId);
         }
       }
 

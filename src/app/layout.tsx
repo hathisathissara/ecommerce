@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import connectDB from "@/lib/db";
+import Setting from "@/models/Setting";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -15,44 +17,54 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  // WhatsApp/FB crawler එකට relative image path resolve කරගන්න මේක අනිවාර්යයෙන්ම ඕන
-  metadataBase: new URL("https://lumosstore.vercel.app"),
+export async function generateMetadata(): Promise<Metadata> {
+  await connectDB();
+  const settings = await Setting.findOne();
+  
+  const siteTitle = settings?.storeName || "The Store";
+  const favicon = settings?.favicon || settings?.logo || "/favicon.ico";
 
-  title: {
-    default: "The Store | Luxury Perfumes & Cosmetics", // සාමාන්‍ය පිටුවල පෙන්වන නම
-    template: "%s | The Store", // වෙනත් පිටුවල නම මෙයට එකතු වේ (e.g. Chanel No 5 | The Store)
-  },
-  description: "Explore our premium collection of imported luxury perfumes, cosmetics, and custom gift boxes in Sri Lanka.",
-  keywords: ["perfumes", "cosmetics", "luxury perfumes sri lanka", "imported cosmetics", "custom gift box builder"],
-  authors: [{ name: "The Store Team" }],
+  return {
+    metadataBase: new URL("https://lumosstore.vercel.app"),
 
-  // Facebook, WhatsApp, Viber Share වලදී ලස්සනට පින්තූරය සහ විස්තරය පෙන්වීමට (OpenGraph)
-  openGraph: {
-    title: "The Store | Luxury Perfumes & Cosmetics",
-    description: "Explore our premium collection of imported luxury perfumes and cosmetics.",
-    url: "https://lumosstore.vercel.app/", // පසුව ඔයාගේ සැබෑ Domain එක දාන්න
-    siteName: "The Store",
-    locale: "en_US",
-    type: "website",
-    images: [
-      {
-        url: "/og-image.jpg", // public/ folder එකේ මේ නමින්ම image එකක් දාන්න
-        width: 1200,
-        height: 630,
-        alt: "The Store - Luxury Perfumes & Cosmetics",
-      },
-    ],
-  },
+    title: {
+      default: `${siteTitle} | Luxury Perfumes & Cosmetics`,
+      template: `%s | ${siteTitle}`,
+    },
+    description: "Explore our premium collection of imported luxury perfumes, cosmetics, and custom gift boxes in Sri Lanka.",
+    keywords: ["perfumes", "cosmetics", "luxury perfumes sri lanka", "imported cosmetics", "custom gift box builder"],
+    authors: [{ name: `${siteTitle} Team` }],
+    icons: {
+      icon: favicon,
+      shortcut: favicon,
+      apple: favicon,
+    },
 
-  // Twitter/X card - WhatsApp සමහරවිට මේකත් fallback විදිහට check කරනවා
-  twitter: {
-    card: "summary_large_image",
-    title: "The Store | Luxury Perfumes & Cosmetics",
-    description: "Explore our premium collection of imported luxury perfumes and cosmetics.",
-    images: ["/og-image.jpg"],
-  },
-};
+    openGraph: {
+      title: `${siteTitle} | Luxury Perfumes & Cosmetics`,
+      description: "Explore our premium collection of imported luxury perfumes and cosmetics.",
+      url: "https://lumosstore.vercel.app/",
+      siteName: siteTitle,
+      locale: "en_US",
+      type: "website",
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: `${siteTitle} - Luxury Perfumes & Cosmetics`,
+        },
+      ],
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title: `${siteTitle} | Luxury Perfumes & Cosmetics`,
+      description: "Explore our premium collection of imported luxury perfumes and cosmetics.",
+      images: ["/og-image.jpg"],
+    },
+  };
+}
 
 export default function RootLayout({
   children,

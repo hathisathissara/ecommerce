@@ -8,6 +8,7 @@ export default function AdminSettings() {
   const [storeName, setStoreName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [contactAddress, setContactAddress] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");
@@ -19,6 +20,10 @@ export default function AdminSettings() {
   // Logo States
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [existingLogo, setExistingLogo] = useState("");
+
+  // Favicon States
+  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [existingFavicon, setExistingFavicon] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -32,6 +37,7 @@ export default function AdminSettings() {
           setStoreName(data.storeName);
           setContactEmail(data.contactEmail);
           setContactPhone(data.contactPhone);
+          setWhatsappNumber(data.whatsappNumber || "");
           setContactAddress(data.contactAddress);
           setBankName(data.bankName);
           setBankAccountName(data.bankAccountName);
@@ -40,6 +46,7 @@ export default function AdminSettings() {
           setDeliveryCharge(data.deliveryCharge.toString());
           setFreeDeliveryThreshold(data.freeDeliveryThreshold.toString());
           setExistingLogo(data.logo || "");
+          setExistingFavicon(data.favicon || "");
         }
       } catch (err) {
         console.error("Failed to fetch settings", err);
@@ -55,6 +62,7 @@ export default function AdminSettings() {
 
     try {
       let logoUrl = existingLogo;
+      let faviconUrl = existingFavicon;
 
       if (logoFile) {
         const formData = new FormData();
@@ -66,14 +74,26 @@ export default function AdminSettings() {
         logoUrl = uploadData.url;
       }
 
+      if (faviconFile) {
+        const formData = new FormData();
+        formData.append("file", faviconFile);
+
+        const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData });
+        if (!uploadRes.ok) throw new Error("Favicon upload failed");
+        const uploadData = await uploadRes.json();
+        faviconUrl = uploadData.url;
+      }
+
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storeName,
           logo: logoUrl,
+          favicon: faviconUrl,
           contactEmail,
           contactPhone,
+          whatsappNumber,
           contactAddress,
           bankName,
           bankAccountName,
@@ -87,10 +107,15 @@ export default function AdminSettings() {
       if (res.ok) {
         setSuccess(true);
         setLogoFile(null);
-        const fileInput = document.getElementById("store-logo") as HTMLInputElement;
-        if (fileInput) fileInput.value = "";
+        setFaviconFile(null);
+        const logoInput = document.getElementById("store-logo") as HTMLInputElement;
+        if (logoInput) logoInput.value = "";
+        const faviconInput = document.getElementById("store-favicon") as HTMLInputElement;
+        if (faviconInput) faviconInput.value = "";
+        
         const updatedData = await res.json();
         setExistingLogo(updatedData.logo || "");
+        setExistingFavicon(updatedData.favicon || "");
       }
     } catch (err) {
       console.error("Failed to update settings", err);
@@ -158,6 +183,34 @@ export default function AdminSettings() {
                   </div>
                 )}
               </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  Favicon Icon
+                </label>
+                <input
+                  id="store-favicon"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFaviconFile(e.target.files?.[0] || null)}
+                  className="w-full p-2 border border-gray-200 rounded-xl bg-white text-xs text-gray-500"
+                />
+                
+                {existingFavicon && (
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 font-semibold">Active Favicon:</span>
+                    <div className="h-8 w-8 relative bg-gray-50 border border-gray-100 rounded-lg overflow-hidden p-1">
+                      <Image
+                        src={existingFavicon}
+                        alt="Favicon"
+                        fill
+                        unoptimized
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -187,6 +240,19 @@ export default function AdminSettings() {
                   onChange={(e) => setContactPhone(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 bg-white outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  required
+                  placeholder="e.g. 94771234567"
                 />
               </div>
               <div className="sm:col-span-2">

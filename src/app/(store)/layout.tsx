@@ -7,6 +7,8 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import CartIcon from "@/components/CartIcon";
 import CartDrawer from "@/components/CartDrawer";
+import SearchOverlay from "@/components/SearchOverlay";
+import WhatsAppButton from "@/components/WhatsAppButton";
 import { useState, useEffect } from "react";
 
 interface Settings {
@@ -14,6 +16,7 @@ interface Settings {
   logo?: string;
   contactEmail?: string;
   contactPhone?: string;
+  whatsappNumber?: string;
   contactAddress?: string;
   freeDeliveryThreshold?: number;
 }
@@ -21,6 +24,7 @@ interface Settings {
 function StoreHeader({ settings }: { settings: Settings }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -86,8 +90,18 @@ function StoreHeader({ settings }: { settings: Settings }) {
             </Link>
           </nav>
 
-          {/* Right: Cart + Hamburger */}
+          {/* Right: Search + Cart + Hamburger */}
           <div className="flex items-center gap-2">
+            {/* Search Icon */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition text-gray-600 hover:text-gray-900"
+              aria-label="Search"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </button>
             <CartIcon />
             {/* Mobile hamburger */}
             <button
@@ -137,6 +151,9 @@ function StoreHeader({ settings }: { settings: Settings }) {
           </Link>
         </nav>
       </div>
+
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
@@ -147,6 +164,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
     logo: "",
     contactEmail: "info@thestore.com",
     contactPhone: "0771234567",
+    whatsappNumber: "94771234567",
     contactAddress: "Colombo, Sri Lanka",
     freeDeliveryThreshold: 5000,
   });
@@ -154,7 +172,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.json())
-      .then((data) => setSettings(data))
+      .then((data) => setSettings((prev) => ({ ...prev, ...data })))
       .catch(() => {});
   }, []);
 
@@ -167,6 +185,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
           <main className="flex-grow">{children}</main>
 
           <CartDrawer />
+          <WhatsAppButton whatsappNumber={settings.whatsappNumber} />
 
           {/* Footer */}
           <footer className="bg-gray-900 text-gray-300 pt-14 pb-6">
