@@ -41,7 +41,7 @@ function StoreHeader({ settings }: { settings: Settings }) {
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-white transition-shadow duration-300 ${
+      className={`print:hidden sticky top-0 z-50 bg-white transition-shadow duration-300 ${
         scrolled ? "shadow-md border-b border-gray-100" : "border-b border-gray-100"
       }`}
     >
@@ -184,11 +184,15 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
 
           <main className="flex-grow">{children}</main>
 
-          <CartDrawer />
-          <WhatsAppButton whatsappNumber={settings.whatsappNumber} />
+          <div className="print:hidden">
+            <CartDrawer />
+          </div>
+          <div className="print:hidden">
+            <WhatsAppButton whatsappNumber={settings.whatsappNumber} />
+          </div>
 
           {/* Footer */}
-          <footer className="bg-gray-900 text-gray-300 pt-14 pb-6">
+          <footer className="print:hidden bg-gray-900 text-gray-300 pt-14 pb-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
                 {/* Brand */}
