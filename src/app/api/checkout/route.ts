@@ -19,7 +19,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Bank slip is required for Bank Transfer" }, { status: 400 });
     }
 
-    // 1. Order එක Database එකේ සේව් කිරීම
+    // 1. 🛡️ BACKEND DOUBLE-CHECK: කූපන් කෝඩ් එක දැනටමත් මෙම Email එකෙන් භාවිත කර තිබේදැයි බලයි
+    if (couponCode) {
+      const alreadyUsed = await Order.findOne({
+        "customer.email": customer.email.toLowerCase().trim(),
+        couponCode: couponCode.toUpperCase()
+      });
+      if (alreadyUsed) {
+        return NextResponse.json({ error: "This coupon code has already been used by this email address!" }, { status: 400 });
+      }
+    }
+
+    // Order එක Database එකේ සේව් කිරීම
     const newOrder = await Order.create({
       customer,
       items,
@@ -31,31 +42,22 @@ export async function POST(req: Request) {
       shippingFee: shippingFee ? Number(shippingFee) : 0,
     });
 
-    // 2. ⚡ ඇණවුම සාර්ථක වූ පසු ඔටෝම සැබෑ Stock ප්‍රමාණයන් අඩු කිරීමේ Logic එක ⚡
+    // 2. ඇණවුම සාර්ථක වූ පසු ඔටෝම Stock ප්‍රමාණයන් අඩු කිරීම
     for (const item of items) {
-      // Custom Gift Boxes වල IDs සෘජුව MongoDB ObjectIDs නොවන නිසා ඒවායේ stock update එක skip කරයි
       if (item._id.startsWith("gift-box-") || item._id.startsWith("custom-gift-")) {
         continue;
       }
-
-      // ප්‍රභේදයක් (Variant: Size + Color) මිලදී ගෙන තිබේ නම් (e.g. ID එකෙහි - සලකුණක් ඇත)
       if (item._id.includes("-")) {
         const parts = item._id.split("-");
         const prodId = parts[0];
         const size = parts[1] || undefined;
         const color = parts[2] || undefined;
 
-        // dynamic query: size සහ color දෙකම ඇති variant එක සොයා එහි stock එක අඩු කරයි
         await Product.updateOne(
-          { 
-            _id: prodId, 
-            "variants.size": size,
-            "variants.color": color 
-          },
+          { _id: prodId, "variants.size": size, "variants.color": color },
           { $inc: { "variants.$.stock": -item.quantity } }
         );
       } else {
-        // සාමාන්‍ය භාණ්ඩයක් නම් එහි Base Stock එකෙන් තොග ප්‍රමාණය අඩු කරයි
         await Product.updateOne(
           { _id: item._id },
           { $inc: { stock: -item.quantity } }
