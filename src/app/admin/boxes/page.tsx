@@ -25,14 +25,18 @@ export default function AdminBoxes() {
   const [existingImage, setExistingImage] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchBoxes = async () => {
+    setFetchLoading(true);
     try {
       const res = await fetch("/api/admin/boxes");
       if (res.ok) setBoxes(await res.json());
     } catch (err) {
       console.error("Failed to fetch boxes", err);
+    } finally {
+      setFetchLoading(false);
     }
   };
 
@@ -142,6 +146,11 @@ export default function AdminBoxes() {
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Add, update, or remove presentation options for the custom gift builder.</p>
       </div>
 
+      {fetchLoading ? (
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <p className="text-sm font-medium text-gray-400 animate-pulse">Loading gift boxes...</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Add / Edit Form Card */}
         <div className="lg:col-span-4 bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
@@ -293,6 +302,7 @@ export default function AdminBoxes() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

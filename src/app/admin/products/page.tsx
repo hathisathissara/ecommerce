@@ -93,9 +93,11 @@ export default function AdminProducts() {
   const [editingProductId, setEditingProductId] = useState("");
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchData = async () => {
+    setFetchLoading(true);
     try {
       const prodRes = await fetch("/api/admin/products");
       const catRes = await fetch("/api/admin/categories");
@@ -106,11 +108,13 @@ export default function AdminProducts() {
       if (brandRes.ok) setBrands(await brandRes.json());
     } catch (err) {
       console.error("Error loading data", err);
+    } finally {
+      setFetchLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    setTimeout(() => fetchData(), 0);
   }, []);
 
   const handleAddVariantToList = () => {
@@ -160,7 +164,7 @@ export default function AdminProducts() {
         color: v.color || "",
         price: v.price.toString(),
         discountValue: v.discountValue ? v.discountValue.toString() : "",
-        discountType: (v.discountType as any) || "Percentage",
+        discountType: (v.discountType === "Fixed" ? "Fixed" : "Percentage"),
         stock: v.stock.toString(),
         sku: v.sku || "",
       }))
@@ -334,6 +338,11 @@ export default function AdminProducts() {
               </div>
               <button onClick={handleCancelEdit} className="text-gray-500 hover:text-black font-bold text-lg p-2">✕</button>
             </div>
+            {error && (
+              <div className="bg-red-50 border-b border-red-100 text-red-600 text-xs p-3 font-semibold text-center">
+                ⚠️ {error}
+              </div>
+            )}
 
             {/* Modal Body (2-Column Scrollable Form Grid) */}
             <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
@@ -433,7 +442,7 @@ export default function AdminProducts() {
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Discount Type</label>
-                      <select value={discountType} onChange={(e) => setDiscountType(e.target.value as any)} className="w-full p-2 border rounded-xl text-xs bg-white outline-none focus:ring-1 focus:ring-black">
+                      <select value={discountType} onChange={(e) => setDiscountType(e.target.value as "Percentage" | "Fixed")} className="w-full p-2 border rounded-xl text-xs bg-white outline-none focus:ring-1 focus:ring-black">
                         <option value="Percentage">Percentage (%)</option>
                         <option value="Fixed">Fixed Amount (LKR)</option>
                       </select>
@@ -498,7 +507,7 @@ export default function AdminProducts() {
                     </div>
                     <div>
                       <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Discount Type</label>
-                      <select value={vDiscountType} onChange={(e) => setVDiscountType(e.target.value as any)} className="w-full p-1.5 border rounded bg-white text-[10px] outline-none focus:ring-1 focus:ring-black">
+                      <select value={vDiscountType} onChange={(e) => setVDiscountType(e.target.value as "Percentage" | "Fixed")} className="w-full p-1.5 border rounded bg-white text-[10px] outline-none focus:ring-1 focus:ring-black">
                         <option value="Percentage">Percentage (%)</option>
                         <option value="Fixed">Fixed (LKR)</option>
                       </select>
@@ -559,7 +568,11 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* ⚡ FULL-WIDTH INVENTORY TABLE ⚡ */}
+      {fetchLoading ? (
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <p className="text-sm font-medium text-gray-400 animate-pulse">Loading products...</p>
+        </div>
+      ) : (
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
@@ -625,6 +638,7 @@ export default function AdminProducts() {
           </div>
         )}
       </div>
+      )}
 
     </div>
   );

@@ -26,14 +26,18 @@ export default function AdminBanners() {
   const [existingImage, setExistingImage] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchBanners = async () => {
+    setFetchLoading(true);
     try {
       const res = await fetch("/api/admin/banners");
       if (res.ok) setBanners(await res.json());
     } catch (err) {
       console.error("Failed to fetch banners", err);
+    } finally {
+      setFetchLoading(false);
     }
   };
 
@@ -138,6 +142,11 @@ export default function AdminBanners() {
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Configure homepage hero slides and promotional banners.</p>
       </div>
 
+      {fetchLoading ? (
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <p className="text-sm font-medium text-gray-400 animate-pulse">Loading banners...</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Form Card */}
         <div className="lg:col-span-4 bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
@@ -279,6 +288,7 @@ export default function AdminBanners() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

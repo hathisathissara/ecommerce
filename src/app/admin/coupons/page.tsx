@@ -25,14 +25,18 @@ export default function AdminCoupons() {
   const [editingCouponId, setEditingCouponId] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchCoupons = async () => {
+    setFetchLoading(true);
     try {
       const res = await fetch("/api/admin/coupons");
       if (res.ok) setCoupons(await res.json());
     } catch (err) {
       console.error("Failed to fetch coupons", err);
+    } finally {
+      setFetchLoading(false);
     }
   };
 
@@ -125,6 +129,11 @@ export default function AdminCoupons() {
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Configure and manage active store coupon promotional discount rules.</p>
       </div>
 
+      {fetchLoading ? (
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <p className="text-sm font-medium text-gray-400 animate-pulse">Loading coupons...</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Add / Edit Form Card */}
         <div className="lg:col-span-4 bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
@@ -291,6 +300,7 @@ export default function AdminCoupons() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
