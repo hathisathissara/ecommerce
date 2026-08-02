@@ -2,18 +2,18 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Coupon from "@/models/Coupon";
-import Order from "@/models/Order"; // <-- Order Model එක import කළා
+import Order from "@/models/Order"; // <-- Imported the Order Model
 
 export async function POST(req: Request) {
   try {
     await connectDB();
-    const { code, totalAmount, email } = await req.json(); // <-- email දත්තයද ලබාගනී
+    const { code, totalAmount, email } = await req.json(); // <-- also retrieves email data
 
     if (!code || !totalAmount) {
       return NextResponse.json({ error: "Code and amount are required" }, { status: 400 });
     }
 
-    // 1. කූපන් කෝඩ් එක පරීක්ෂා කිරීම
+    // 1. Checking the coupon code
     const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
     
     if (!coupon) {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     // 2. 🛡️ ONE-TIME USE SECURITY CHECK 🛡️
-    // පාරිභෝගිකයාගේ Email එක ලැබී තිබේ නම්, ඔහු දැනටමත් මෙම කූපන් එක භාවිත කර ඇත්දැයි බලයි
+    // If the customer's email is received, it will check if he has already used this coupon
     if (email) {
       const alreadyUsed = await Order.findOne({
         "customer.email": email.toLowerCase().trim(),
@@ -33,12 +33,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. අවම බිල්පත් අගය සපුරා තිබේදැයි බැලීම
+    // 3. Check if the minimum billing value is met
     if (totalAmount < coupon.minOrderAmount) {
       return NextResponse.json({ error: `This coupon requires a minimum spend of LKR ${coupon.minOrderAmount}` }, { status: 400 });
     }
 
-    // 4. වට්ටම් මුදල ගණනය කිරීම
+    // 4. Calculation of discount amount
     let discountAmount = 0;
     if (coupon.discountType === "Percentage") {
       discountAmount = Math.round((totalAmount * coupon.discountValue) / 100);

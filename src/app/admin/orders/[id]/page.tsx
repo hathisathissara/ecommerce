@@ -20,7 +20,7 @@ export default async function AdminOrderDetailPage({
 
   const settings = await Setting.findOne();
 
-  // Serialization (Mongoose Objects සරල JSON බවට පත් කිරීම)
+  // Serialization (Converting Mongoose Objects into plain JSON)
   const serializedOrder = JSON.parse(JSON.stringify(order));
   const serializedSettings = JSON.parse(JSON.stringify(settings));
 

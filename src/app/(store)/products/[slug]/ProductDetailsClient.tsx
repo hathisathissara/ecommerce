@@ -7,7 +7,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import Image from "next/image"; // Next.js Image import කළා [1]
+import Image from "next/image"; // Imported Next.js Image [1]
 
 interface VariantType {
   size?: string;
@@ -47,7 +47,7 @@ interface ProductType {
 
 interface ProductProps {
   product: ProductType;
-  relatedProducts: ProductType[]; // any වෙනුවට ProductType[] දැමුවා
+  relatedProducts: ProductType[]; // Put ProductType[] instead of any
 }
 
 interface ReviewType {
@@ -84,7 +84,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
   const [selectedSize, setSelectedSize] = useState<string>(availableSizes.length > 0 ? (availableSizes[0] as string) : "");
   const [selectedColor, setSelectedColor] = useState<string>(availableColors.length > 0 ? (availableColors[0] as string) : "");
 
-  // ⚡ React 19 Best Practice: useEffect එකක් නැතිව සෘජුවම render cycle එකේදී variant එක ගණනය කරයි ⚡ [2]
+  // ⚡ React 19 Best Practice: calculates the variant directly in the render cycle without a useEffect ⚡ [2]
   const selectedVariant = hasVariants
     ? product.variants!.find((v) => {
         const sizeMatch = selectedSize ? v.size === selectedSize : true;
@@ -95,7 +95,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
   const isLiked = isInWishlist(product._id);
 
-  // Component scope එකේම fetchReviews තියෙන නිසා handleReviewSubmit එකෙනුත් call කරන්න පුළුවන්
+  // Since there are fetchReviews in the component scope itself, it can be called with handleReviewSubmit
   const fetchReviews = async () => {
     try {
       const res = await fetch(`/api/reviews?productId=${product._id}`);
@@ -108,7 +108,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
     }
   };
 
-  // Mongoose Product එක වෙනස් වන විට අදාළ Reviews ලෝඩ් කිරීම (Exhaustive deps ආරක්ෂිතයි)
+  // Loading related reviews when the Mongoose product changes (exhaustive deps are safe)
   useEffect(() => {
     fetchReviews();
     setActiveImage(product.images[0]);
@@ -120,7 +120,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
   const currentDiscountPrice = selectedVariant ? selectedVariant.discountPrice : product.discountPrice;
   const currentStock = selectedVariant ? selectedVariant.stock : product.stock;
 
-  // Discount Percentage ගණනය කිරීම
+  // Calculation of Discount Percentage
   const activeDiscountValue = selectedVariant ? (selectedVariant.discountValue || 0) : (product.discountValue || 0);
   const activeDiscountType = selectedVariant ? (selectedVariant.discountType || "Percentage") : (product.discountType || "Percentage");
   
@@ -131,7 +131,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
     : 0;
 
   const getCartItemDetails = () => {
-    const variantDetails = []; // let වෙනුවට const දැමුවා
+    const variantDetails = []; // Replaced const with let
     if (selectedVariant?.size) variantDetails.push(selectedVariant.size);
     if (selectedVariant?.color) variantDetails.push(selectedVariant.color);
     
@@ -206,7 +206,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
       {/* 2. SPLIT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
-        {/* LEFT COLUMN (Next.js Image Component වලින් සජීවීව සකසා ඇත) */}
+        {/* LEFT COLUMN (set live from Next.js Image Component) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="aspect-square w-full border border-gray-100 rounded-2xl overflow-hidden bg-gray-50 relative">
             <Image 
@@ -276,7 +276,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
             <div>
               {currentStock > 0 ? (
                 <div className="space-y-1">
-                  <span className="text-green-600 text-xs font-bold">✓ In Stock (දිවයින පුරා බෙදාහැරීම)</span>
+<span className="text-green-600 text-xs font-bold">✓ In Stock (Islandwide Delivery)</span>
                   {currentStock <= 5 && (
                     <p className="text-red-600 text-[10px] font-black animate-pulse">🔥 Only {currentStock} items left in stock!</p>
                   )}
@@ -484,7 +484,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
         <div className="border-t pt-12 space-y-6">
           <h2 className="text-xl sm:text-2xl font-black text-gray-950 uppercase tracking-tight">Related Products</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((prod: ProductType) => ( // any වෙනුවට ProductType දැමුවා
+            {relatedProducts.map((prod: ProductType) => ( // Put ProductType instead of any
               <ProductCard
                 key={prod._id}
                 product={{

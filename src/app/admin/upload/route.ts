@@ -19,13 +19,13 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Cloudinary එකට Upload කිරීම (මෙහිදී Compress සහ WebP බවට පත් කිරීම සිදු කරයි)
+    // Uploading to Cloudinary (where Compress and Convert to WebP is done)
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { 
           folder: "store_uploads",
-          format: "webp",      // 1. පින්තූරය WebP බවට පත් කරයි
-          quality: "auto",     // 2. පින්තූරයේ Quality එක ඔටෝ Compress කරයි (Size එක ගොඩක් අඩු වෙයි)
+          format: "webp",      // 1. Convert the image to WebP
+          quality: "auto",     // 2. The quality of the picture will be auto compressed (the size will be reduced a lot)
           fetch_format: "webp"
         }, 
         (error, result) => {

@@ -27,7 +27,7 @@ const productSchema = new Schema(
     stockStatus: { type: String, enum: ["In Stock", "Out of Stock", "Pre-Order"], default: "In Stock" },
     barcode: { type: String },
     trackInventory: { type: Boolean, default: true },
-    salesCount: { type: Number, default: 0 }, // ⚡ විකුණුම් ගණන සටහන් වන නවතම field එක ⚡
+    salesCount: { type: Number, default: 0 }, // ⚡ The latest field where the number of sales is recorded ⚡
 
     // ④ VARIANTS (Size + Color)
     variants: [

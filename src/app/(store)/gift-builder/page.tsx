@@ -35,11 +35,11 @@ interface ProductType {
   variants?: VariantType[];
 }
 
-// තෑගි පෙට්ටියට දමන අයිතම ව්‍යුහය (ප්‍රභේදය සමඟින්)
+// Gift box item structure (with variant)
 interface SelectedItemType {
   _id: string; // Dynamic Unique ID (product-id-size)
   product: ProductType;
-  selectedVariant: VariantType | null; // තෝරාගත් ප්‍රභේදය
+  selectedVariant: VariantType | null; // Selected genre
   quantity: number;
 }
 
@@ -55,7 +55,7 @@ export default function GiftBuilder() {
   const [cardTheme, setCardTheme] = useState("None");
   const [cardMessage, setCardMessage] = useState("");
 
-  // Card එක මත තෝරාගෙන ඇති ප්‍රභේදය තාවකාලිකව තබාගන්නා State එක (Product ID -> Selected Variant)
+  // The state that temporarily keeps the variant selected on the card (Product ID -> Selected Variant)
   const [activeVariants, setActiveVariants] = useState<Record<string, VariantType>>({});
 
   const [loading, setLoading] = useState(true);
@@ -243,7 +243,7 @@ export default function GiftBuilder() {
                           </div>
                           <h3 className="font-bold text-sm text-gray-900">{box.name}</h3>
                           
-                          {/* ⚡ අලුතින් එක්කළ: පෙට්ටියේ විස්තරය (Description) පෙන්වන කොටස ⚡ */}
+                          {/* ⚡ Newly added: the section that shows the description of the box ⚡ */}
                           {box.description && (
                             <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed line-clamp-2">
                               {box.description}
@@ -317,7 +317,7 @@ export default function GiftBuilder() {
                           <div className="flex-grow mb-3 space-y-2">
                             <h4 className="font-bold text-xs text-gray-900 line-clamp-1">{prod.name}</h4>
                             
-                            {/* Product Variants (ප්‍රභේද බටන්ස්) */}
+                            {/* Product Variants (Variants Buttons) */}
                             {hasVariants && (
                               <div className="flex flex-wrap gap-1">
                                 {prod.variants!.map((v, i) => (
@@ -467,7 +467,7 @@ export default function GiftBuilder() {
             <h2 className="text-lg font-black text-gray-900">Your Gift Box Summary</h2>
 
             <div className="space-y-4 text-xs sm:text-sm text-gray-600">
-              {/* Selected Box (සාරාංශය තුලද පෙට්ටියේ විස්තරය dynamic පෙන්වයි) */}
+              {/* Selected Box (the description of the box is shown dynamically in the summary as well) */}
               {selectedBox && (
                 <div className="border-b border-gray-200 pb-3 space-y-1.5">
                   <div className="flex justify-between items-center">
@@ -477,7 +477,7 @@ export default function GiftBuilder() {
                     </div>
                     <span className="font-bold text-gray-900">LKR {selectedBox.price.toLocaleString()}</span>
                   </div>
-                  {/* පෙට්ටියේ විස්තරය Sidebar එකේද පෙන්වයි */}
+                  {/* The description of the box is also displayed in the sidebar */}
                   {selectedBox.description && (
                     <p className="text-[10px] text-gray-400 italic leading-relaxed">
                       💡 {selectedBox.description}

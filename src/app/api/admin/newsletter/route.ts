@@ -42,7 +42,7 @@ export async function DELETE(req: Request) {
   }
 }
 
-// 3. POST - Send Personalized Individual Email Campaign Concurrently (BCC වෙනුවට)
+// 3. POST - Send Personalized Individual Email Campaign Concurrently (Instead of BCC)
 export async function POST(req: Request) {
   try {
     await connectDB();
@@ -62,11 +62,11 @@ export async function POST(req: Request) {
     const storeNameUpper = storeName.toUpperCase();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-    // ⚡ හැම පාරිභෝගිකයෙකුටම තනි තනිව (BCC නැතුව) යැවීමට Promises array එකක් සාදා ගැනීම ⚡
+    // ⚡ Creating a Promises array to send to each customer individually (without BCC) ⚡
     const emailPromises = subscribers.map((sub) => {
       const recipientEmail = sub.email;
 
-      // මෙම පාරිභෝගිකයාගේ ඊමේල් එක සෘජුවම Unsubscribe ලින්ක් එකට එකතු කරයි (Personalized Link)
+      // This customer's email is added directly to the unsubscribe link (Personalized Link).
       const emailHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
           
@@ -92,13 +92,13 @@ export async function POST(req: Request) {
 
       return transporter.sendMail({
         from: `"${storeName}" <${process.env.EMAIL_USER}>`,
-        to: recipientEmail, // සෘජුවම පාරිභෝගිකයාගේ ලිපිනයට
+        to: recipientEmail, // Directly to the customer's address
         subject: subject,
         html: emailHtml,
       });
     });
 
-    // Promise.all භාවිතයෙන් සියලුම ඊමේල්ස් එකවර ඉතාමත් වේගයෙන් යවයි (Timeout වීම් වළක්වයි)
+    // Sends all emails at once using Promise.all very fast (prevents timeouts)
     await Promise.all(emailPromises);
 
     return NextResponse.json({ message: "Newsletter campaign sent successfully!" }, { status: 200 });

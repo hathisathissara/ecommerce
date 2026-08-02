@@ -2,16 +2,16 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Setting from "@/models/Setting";
-import { v2 as cloudinary } from "cloudinary"; // <-- Cloudinary import කළා
+import { v2 as cloudinary } from "cloudinary"; // <-- Cloudinary imported
 
-// Cloudinary Configuration එක
+// Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// URL එකකින් Cloudinary Public ID එක වෙන් කරගන්නා Helper Function එක
+// The helper function that separates the Cloudinary Public ID from a URL
 const getPublicIdFromUrl = (url: string) => {
   try {
     const parts = url.split("/image/upload/");
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const { logo, favicon } = body; // අලුතින් ලැබෙන Logo/Favicon URLs
+    const { logo, favicon } = body; // New Logo/Favicon URLs
 
     let settings = await Setting.findOne();
 

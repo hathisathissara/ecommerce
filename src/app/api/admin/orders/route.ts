@@ -3,18 +3,18 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
 
-// 1. සියලුම Orders බලාගැනීම (GET)
+// 1. View All Orders (GET)
 export async function GET() {
   try {
     await connectDB();
-    const orders = await Order.find().sort({ createdAt: -1 }); // අලුත්ම ඒවා මුලින්ම පෙන්වයි
+    const orders = await Order.find().sort({ createdAt: -1 }); // Newest ones are shown first
     return NextResponse.json(orders, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
 }
 
-// 2. Order එකක Status එක වෙනස් කිරීම (PUT)
+// 2. Changing the Status of an Order (PUT)
 export async function PUT(req: Request) {
   try {
     await connectDB();
@@ -27,7 +27,7 @@ export async function PUT(req: Request) {
     const updatedOrder = await Order.findByIdAndUpdate(
       orderId,
       { status },
-      { new: true } // Update වුණු අලුත් Order එක ආපහු ලබාදීමට
+      { new: true } // To return the updated new order
     );
 
     if (!updatedOrder) {

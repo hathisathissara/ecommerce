@@ -4,7 +4,7 @@ import mongoose, { Schema, models } from "mongoose";
 const settingSchema = new Schema(
   {
     storeName: { type: String, default: "The Store" },
-    logo: { type: String, default: "" }, // <-- dynamic logo එක සඳහා Cloudinary Image URL එක
+    logo: { type: String, default: "" }, // <-- Cloudinary Image URL for the dynamic logo
     favicon: { type: String, default: "" },
     contactEmail: { type: String, default: "info@thestore.com" },
     contactPhone: { type: String, default: "0771234567" },

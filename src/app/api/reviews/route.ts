@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Review from "@/models/Review";
 
-// 1. අදාළ Product ID එකට ලැබුණු සියලුම Reviews බලාගැනීම (GET)
+// 1. Viewing (GET) all reviews received for the relevant Product ID
 export async function GET(req: Request) {
   try {
     await connectDB();
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   }
 }
 
-// 2. අලුත් Review එකක් එකතු කිරීම (POST)
+// 2. Adding a New Review (POST)
 export async function POST(req: Request) {
   try {
     await connectDB();

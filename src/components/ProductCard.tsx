@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import Image from "next/image";
-import { useRouter } from "next/navigation"; // useRouter import කළා
+import { useRouter } from "next/navigation"; // Imported useRouter
 
 interface VariantType {
   size: string;
@@ -23,7 +23,7 @@ interface ProductCardProps {
     discountPrice?: number;
     images: string[];
     category?: { name: string };
-    variants?: VariantType[]; // <-- Variants array එක එකතු කළා
+    variants?: VariantType[]; // <-- Added Variants array
   };
 }
 
@@ -35,31 +35,31 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isLiked = isInWishlist(product._id);
   const hasVariants = product.variants && product.variants.length > 0;
 
-  // 1. ⚡ DYNAMIC PRICE: ප්‍රභේද තිබේ නම් අඩුම මිල ගණනය කිරීමේ Logic එක ⚡
+  // 1. ⚡ DYNAMIC PRICE: Logic to calculate the lowest price if there are variants ⚡
   const getLowestPrice = () => {
     if (!hasVariants) return product.discountPrice || product.price;
     
-    // සියලුම Variants වල මිල ගණන් වලින් අඩුම මිල සොයයි
+    // Searches for the lowest price of all variants
     const prices = product.variants!.map((v) => v.discountPrice || v.price);
     return Math.min(...prices);
   };
 
   const lowestPrice = getLowestPrice();
 
-  // Discount % එක ගණනය කිරීම (Base product එක සඳහා පමණි)
+  // Calculation of Discount % (Only for Base Product)
   const discountPercent = product.discountPrice
     ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
     : 0;
 
   // Smart Add to Cart Click Handler
   const handleCartClick = (e: React.MouseEvent) => {
-    e.preventDefault(); // Link එක click වීම වළක්වයි
+    e.preventDefault(); // Prevents the link from being clicked
     
     if (hasVariants) {
-      // Variants තිබේ නම්, පාරිභෝගිකයාට සයිස් එක තෝරන්න කෙලින්ම Product Page එකට යවයි
+      // If Variants are available, the customer selects the size and is sent directly to the Product Page
       router.push(`/products/${product.slug}`);
     } else {
-      // Variants නැත්නම්, සාමාන්‍ය පරිදි Cart එකට කෙලින්ම ඇඩ් කරයි
+      // If there are no variants, it will be added directly to the cart as usual
       addToCart({
         _id: product._id,
         name: product.name,
@@ -118,13 +118,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Info */}
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-grow p-3.5 justify-between">
         <div>
-          {/* Category සහ Variants Indicator Badge */}
+          {/* Category and Variants Indicator Badge */}
           <div className="flex items-center justify-between mb-1 gap-1 flex-wrap">
             <p className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
               {product.category?.name || "Cosmetic"}
             </p>
             
-            {/* ⚡ අලුතින් එක්කළ: පාරිභෝගිකයාට සයිස් කිහිපයක් ඇති බව පෙන්වන බැනරය ⚡ */}
+            {/* ⚡ Newly added: Banner showing that customer has multiple sizes ⚡ */}
             {hasVariants && (
               <span className="text-[9px] bg-pink-50 text-pink-700 font-extrabold px-2 py-0.5 rounded-full">
                 ✨ {product.variants!.length} Options Available
@@ -141,12 +141,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-center justify-between gap-2 mt-4 pt-2 border-t border-gray-50">
           <div className="flex flex-col">
             {hasVariants ? (
-              // Variants තිබේ නම් "From LKR අඩුම_මිල" පෙන්වයි
+              // Variants show "From LKR Lowest_Price" if available
               <span className="text-xs font-semibold text-gray-400">
                 From <span className="text-sm font-black text-gray-900 block">LKR {lowestPrice.toLocaleString()}</span>
               </span>
             ) : (
-              // Variants නැත්නම් සාමාන්‍ය මිල පෙන්වයි
+              // Variants or normal price is shown
               <div className="flex items-baseline gap-1.5">
                 <span className="text-sm font-black text-gray-900">LKR {lowestPrice.toLocaleString()}</span>
                 {product.discountPrice && (
@@ -164,8 +164,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             aria-label={hasVariants ? "Select Options" : "Add to cart"}
             className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 active:scale-95 ${
               hasVariants 
-                ? "bg-white border-2 border-black text-black hover:bg-black hover:text-white" // ප්‍රභේද තිබේ නම් "Choose" ➔ බටන් එක පෙන්වයි
-                : "bg-gray-900 text-white hover:bg-gray-700" // නැත්නම් සාමාන්‍ය Cart බටන් එක
+                ? "bg-white border-2 border-black text-black hover:bg-black hover:text-white" // "Choose" ➔ button will show if variants are available
+                : "bg-gray-900 text-white hover:bg-gray-700" // Or the normal Cart button
             }`}
           >
             {hasVariants ? (

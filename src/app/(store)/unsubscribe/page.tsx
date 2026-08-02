@@ -7,14 +7,14 @@ import Link from "next/link";
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
-  const emailFromQuery = searchParams.get("email"); // URL එකෙන් ?email= අගය කියවා ගනී [1]
+  const emailFromQuery = searchParams.get("email"); // Reads the ?email= value from the URL [1]
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  // දායකත්වයෙන් ඉවත් වීමේ පොදු Function එක
+  // Common unsubscribe function
   const triggerUnsubscribe = async (emailToUnsub: string) => {
     setLoading(true);
     setSuccess(false);
@@ -47,11 +47,11 @@ function UnsubscribeContent() {
     if (email) triggerUnsubscribe(email);
   };
 
-  // ⚡ URL එකේ Email එකක් ඇත්නම් සර්වර් එක ලෝඩ් වෙද්දීම ඔටෝම Unsubscribe කරයි ⚡
+  // ⚡ If there is an email in the URL, the server will automatically unsubscribe when it is loaded ⚡
   useEffect(() => {
     if (emailFromQuery) {
       setEmail(emailFromQuery);
-      triggerUnsubscribe(emailFromQuery); // ඔටෝම unsubscribe ක්‍රියාවලිය සිදුවේ
+      triggerUnsubscribe(emailFromQuery); // Automatic unsubscribe process takes place
     }
   }, [emailFromQuery]);
 
@@ -83,7 +83,7 @@ function UnsubscribeContent() {
 
         {!loading && !success && (
           <div className="space-y-4">
-            <p className="text-xs text-gray-400">දායකත්වයෙන් ඉවත් වීමට පහතින් ඔබගේ Email ලිපිනය තහවුරු කරන්න.</p>
+<p className="text-xs text-gray-400">Confirm your email address below to unsubscribe.</p>
             {error && <p className="text-red-500 text-xs bg-red-50 p-2 rounded">{error}</p>}
 
             <form onSubmit={handleManualSubmit} className="space-y-4 text-left">

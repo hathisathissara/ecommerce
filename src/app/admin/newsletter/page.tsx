@@ -49,7 +49,7 @@ export default function AdminNewsletter() {
     }
   };
 
-  // ⚡ Email Campaign එක එකවර සියල්ලන්ටම යැවීමේ Logic එක ⚡
+  // ⚡ The logic of sending the email campaign to everyone at the same time ⚡
   const handleSendCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subject || !content) return;
@@ -90,7 +90,7 @@ export default function AdminNewsletter() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border h-fit space-y-4">
             <h2 className="text-xl font-semibold text-gray-900">Send Email Campaign</h2>
-            <p className="text-xs text-gray-400">සියලුම පාරිභෝගිකයින්ට එකවර අලංකාර Updates/Offers ඊමේල් මඟින් යවන්න.</p>
+<p className="text-xs text-gray-400">Send beautiful Updates/Offers to all customers at once by email.</p>
             
             {success && <p className="text-green-600 text-xs bg-green-50 p-2.5 rounded font-semibold">✔ Campaign sent successfully! 🎉</p>}
             {error && <p className="text-red-500 text-xs bg-red-50 p-2.5 rounded font-semibold">{error}</p>}
@@ -130,7 +130,7 @@ export default function AdminNewsletter() {
             </form>
           </div>
 
-          {/* දකුණු පැත්ත: List */}
+          {/* Right side: List */}
           <div className="lg:col-span-2 bg-white rounded-xl border shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Subscribed Emails ({subscribers.length})</h2>
             

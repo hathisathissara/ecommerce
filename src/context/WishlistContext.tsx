@@ -43,9 +43,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     setWishlistItems((prev) => {
       const exists = prev.find((i) => i._id === item._id);
       if (exists) {
-        return prev.filter((i) => i._id !== item._id); // දැනටමත් තිබේ නම් අයින් කරයි
+        return prev.filter((i) => i._id !== item._id); // Removes if already present
       }
-      return [...prev, item]; // නැත්නම් එකතු කරයි
+      return [...prev, item]; // Or add
     });
   };
 

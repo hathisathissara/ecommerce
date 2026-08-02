@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Bank slip is required for Bank Transfer" }, { status: 400 });
     }
 
-    // Order එක Database එකේ සේව් කිරීම
+    // Saving the order in the database
     const newOrder = await Order.create({
       customer,
       items,
@@ -31,31 +31,31 @@ export async function POST(req: Request) {
       shippingFee: shippingFee ? Number(shippingFee) : 0,
     });
 
-    // 2. ⚡ ඇණවුම සාර්ථක වූ පසු Stock අඩු කර, Sales Count එක ඔටෝම වැඩි කිරීමේ Atomic Logic එක ⚡ [2]
+    // 2. ⚡ After the order is successful, the Atomic Logic of reducing the Stock and automatically increasing the Sales Count ⚡ [2]
     for (const item of items) {
-      // Custom Gift Boxes වල IDs සෘජුව MongoDB ObjectIDs නොවන නිසා ඒවායේ stock/sales update එක skip කරයි
+      // Because the IDs of Custom Gift Boxes are not directly MongoDB ObjectIDs, their stock/sales update is skipped
       if (item._id.startsWith("gift-box-") || item._id.startsWith("custom-gift-")) {
         continue;
       }
 
-      // ප්‍රභේදයක් (Variant: Size + Color) මිලදී ගෙන තිබේ නම්
+      // If a variant (Variant: Size + Color) is purchased
       if (item._id.includes("-")) {
         const parts = item._id.split("-");
         const prodId = parts[0];
         const size = parts[1] || undefined;
         const color = parts[2] || undefined;
 
-        // Variant stock එක අඩු කරන අතරම, ප්‍රධාන product එකෙහි salesCount එක වැඩි කරයි
+        // Variant increases the salesCount of the main product while reducing the stock
         await Product.updateOne(
           { _id: prodId, "variants.size": size, "variants.color": color },
           { $inc: { "variants.$.stock": -item.quantity } }
         );
         await Product.updateOne(
           { _id: prodId },
-          { $inc: { salesCount: item.quantity } } // salesCount එක වැඩි කරයි [2]
+          { $inc: { salesCount: item.quantity } } // Increases salesCount [2]
         );
       } else {
-        // සාමාන්‍ය භාණ්ඩයක් නම් එහි Base Stock එක අඩු කර, salesCount එක වැඩි කරයි (තනි query එකකින් සිදු වේ) [2]
+        // If it's a normal product, it decreases the Base Stock and increases the salesCount (done in a single query) [2]
         await Product.updateOne(
           { _id: item._id },
           { $inc: { stock: -item.quantity, salesCount: item.quantity } } // [2]
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. ස්වයංක්‍රීයව EMAIL INVOICE යැවීම
+    // 3. Automatic sending of EMAIL INVOICE
     try {
       await sendOrderEmail(newOrder);
     } catch (emailError) {

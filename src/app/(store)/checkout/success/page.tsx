@@ -27,7 +27,7 @@ function SuccessContent() {
   useEffect(() => {
     if (!orderId) return;
 
-    // 1. Order Details Load කර ගැනීම (අපේ tracking API එක හරහා)
+    // 1. Loading Order Details (via our tracking API)
     const fetchOrder = async () => {
       try {
         const res = await fetch("/api/orders/track", {
@@ -58,7 +58,7 @@ function SuccessContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 print:bg-white print:p-0">
       
-      {/* NORMAL BROWSER VIEW (පින්ට් කරද්දී print:hidden මඟින් මෙය සැඟවී යයි) */}
+      {/* NORMAL BROWSER VIEW (print:hidden hides this when printing) */}
       <div className="bg-white p-8 rounded-2xl shadow-sm border max-w-md w-full text-center space-y-6 print:hidden">
         <span className="text-5xl">🎉</span>
         <h1 className="text-3xl font-extrabold text-gray-900">Thank You!</h1>
@@ -94,7 +94,7 @@ function SuccessContent() {
         </div>
       </div>
 
-      {/* ⚡ CUSTOMER PRINT-FRIENDLY RECEIPT (පින්ට් කරද්දී පමණක් පෙනේ) ⚡ */}
+      {/* ⚡ CUSTOMER PRINT-FRIENDLY RECEIPT (only visible when printed) ⚡ */}
       {order && (
         <div className="hidden print:block absolute inset-0 bg-white text-black p-10 space-y-8 text-sm font-sans w-[210mm] h-[297mm]">
           <div className="flex justify-between items-start border-b-2 border-black pb-5">

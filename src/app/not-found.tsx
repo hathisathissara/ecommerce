@@ -21,7 +21,7 @@ export default function NotFound() {
           The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
         </p>
 
-        {/* Action Buttons (පිටු අතර යාමට ලින්ක්ස්) */}
+        {/* Action Buttons (links to move between pages) */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
           <Link
             href="/"

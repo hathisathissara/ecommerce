@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import Setting from "@/models/Setting";
 import connectDB from "@/lib/db";
 
-// Gmail SMTP Config එක සාදාගැනීම
+// Creating Gmail SMTP Config
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -19,7 +19,7 @@ export async function sendOrderEmail(order: any) {
   const storeNameUpper = storeName.toUpperCase();
   const contactEmail = settings?.contactEmail || "";
 
-  // මිලදී ගත් භාණ්ඩ ලැයිස්තුව HTML table එකක් ලෙස සැකසීම
+  // Formatting the list of purchased items as an HTML table
   const itemsHtml = order.items
     .map(
       (item: any) => `
@@ -38,7 +38,7 @@ export async function sendOrderEmail(order: any) {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-  // ලස්සනට මෝස්තර කර ඇති HTML Invoice එක
+  // A beautifully styled HTML Invoice
   const emailHtml = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 16px; color: #1f2937; background-color: #ffffff;">
       
@@ -93,7 +93,7 @@ export async function sendOrderEmail(order: any) {
     </div>
   `;
 
-  // 1. පාරිභෝගිකයාට (Customer) Invoice එක යැවීම
+  // 1. Sending the invoice to the customer
   await transporter.sendMail({
     from: `"${storeName}" <${process.env.EMAIL_USER}>`,
     to: order.customer.email,
@@ -101,7 +101,7 @@ export async function sendOrderEmail(order: any) {
     html: emailHtml,
   });
 
-  // 2. ඔයාට (Admin) අලුත් ඕඩර් එකක් ලැබුණු බව දන්වා Copy එකක් යැවීම
+  // 2. Sending a copy informing you (Admin) that you have received a new order
   await transporter.sendMail({
     from: `"${storeName}" <${process.env.EMAIL_USER}>`,
     to: process.env.EMAIL_USER,

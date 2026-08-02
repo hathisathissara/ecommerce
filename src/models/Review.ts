@@ -4,8 +4,8 @@ import mongoose, { Schema, models } from "mongoose";
 const reviewSchema = new Schema(
   {
     product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
-    name: { type: String, required: true }, // ලියන කෙනාගේ නම
-    rating: { type: Number, required: true, min: 1, max: 5 }, // තරු ගණන 1 සිට 5 දක්වා
+    name: { type: String, required: true }, // Name of the writer
+    rating: { type: Number, required: true, min: 1, max: 5 }, // Number of stars from 1 to 5
     comment: { type: String, required: true },
   },
   { timestamps: true }

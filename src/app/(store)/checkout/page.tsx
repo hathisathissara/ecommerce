@@ -57,7 +57,7 @@ export default function CheckoutPage() {
     return <p className="text-center py-20">Your cart is empty. Please add items to checkout.</p>;
   }
 
-  // Coupon Apply Logic (div button click handler එකක් ලෙස සකසා ඇත)
+  // Coupon Apply Logic (div set as a button click handler)
   const handleApplyCouponClick = async () => {
     if (!couponCode) return;
 
@@ -170,14 +170,14 @@ export default function CheckoutPage() {
   };
 
   return (
-    // ⚡ මුළු පිටුවම තනි Form එකකින් වට කර ඇත ⚡
+    // ⚡ The entire page is surrounded by a single Form ⚡
     <form onSubmit={handleSubmit} className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-6">
       <h1 className="text-3xl font-bold text-gray-800">Checkout 💳</h1>
       {error && <p className="text-red-500 text-sm mb-4 bg-red-50 p-2.5 rounded">{error}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         
-        {/* වම් පැත්ත (col-span-7): Shipping & Payment Details */}
+        {/* Left Side (col-span-7): Shipping & Payment Details */}
         <div className="lg:col-span-7 space-y-6">
           <h2 className="text-xl font-bold text-gray-900 border-b pb-2">Shipping Information</h2>
           <div className="space-y-4">
@@ -233,7 +233,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* දකුණු පැත්ත (col-span-5): Order Summary, Coupons, and Place Order Button */}
+        {/* Right side (col-span-5): Order Summary, Coupons, and Place Order Button */}
         <div className="lg:col-span-5 bg-gray-50 p-6 rounded-2xl border space-y-6 h-fit">
           <h2 className="text-xl font-bold text-gray-900 border-b pb-3">Your Order Summary</h2>
           <div className="divide-y max-h-48 overflow-y-auto pr-2">
@@ -248,7 +248,7 @@ export default function CheckoutPage() {
             ))}
           </div>
 
-          {/* Promo Code Box (nested form එකක් නොවන පරිදි සරල div එකක් කර ඇත) */}
+          {/* Promo Code Box (a simple div instead of a nested form) */}
           <div className="border-t pt-4">
             <h3 className="text-sm font-semibold text-gray-800 mb-2">Have a Promo Code?</h3>
             {appliedCoupon ? (
@@ -266,7 +266,7 @@ export default function CheckoutPage() {
                   className="w-full px-3 py-2 text-sm border rounded-lg uppercase outline-none bg-white text-gray-950"
                 />
                 <button 
-                  type="button" // type="button" නිසා මෙය එබූ විට මුළු ඕඩර් එක සබ්මිට් නොවේ
+                  type="button" // Due to type="button" pressing this will not submit the entire order
                   onClick={handleApplyCouponClick} 
                   disabled={couponLoading || !couponCode} 
                   className="bg-black text-white px-4 py-2 rounded-lg text-xs font-semibold"
@@ -311,9 +311,9 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ⚡ PLACE ORDER BUTTON (දැන් බිල්පතට යටින්ම ලස්සනට සක්‍රීය කර ඇත) ⚡ */}
+          {/* ⚡ PLACE ORDER BUTTON (now nicely enabled right below the bill) ⚡ */}
           <button
-            type="submit" // සෘජුවම මුළු Form එකම Submit කරයි
+            type="submit" // Submit the entire form directly
             disabled={loading}
             className="w-full bg-black text-white py-4 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-800 transition disabled:bg-gray-400"
           >

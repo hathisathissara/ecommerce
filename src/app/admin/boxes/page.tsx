@@ -272,7 +272,7 @@ export default function AdminBoxes() {
                           />
                         </div>
                       </td>
-                      {/* Name එකට යටින් Description එක පෙන්වයි */}
+                      {/* The description is displayed under the name */}
                       <td className="p-3.5 space-y-1">
                         <p className="font-bold text-gray-900">{box.name}</p>
                         <p className="text-xs text-gray-400 line-clamp-1">{box.description}</p>

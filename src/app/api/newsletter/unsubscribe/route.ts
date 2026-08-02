@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email address is required" }, { status: 400 });
     }
 
-    // Email එක සොයාගෙන Database එකෙන් සම්පූර්ණයෙන්ම ඉවත් කිරීම
+    // Find the email and completely remove it from the database
     const deletedSubscriber = await Newsletter.findOneAndDelete({
       email: email.toLowerCase().trim(),
     });

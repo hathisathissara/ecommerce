@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import ProductDetailsClient from "./ProductDetailsClient";
 import type { Metadata } from "next";
 
-// SEO සඳහා Dynamic Metadata
+// Dynamic Metadata for SEO
 export async function generateMetadata({
   params,
 }: {
@@ -51,21 +51,21 @@ export default async function ProductPage({
 
   await connectDB();
   
-  // 1. ප්‍රධාන Product එක ලබාගැනීම (Category slug එකත් සමඟම Populate කරයි)
+  // 1. Getting the main product (populates with the Category slug)
   const product = await Product.findOne({ slug })
-    .populate("category", "name slug") // <-- "name slug" ලෙස වෙනස් කළා
+    .populate("category", "name slug") // <-- Changed to "name slug".
     .populate("brand", "name");
 
   if (!product) {
     notFound();
   }
 
-  // 2. Related Products ලබාගැනීම
+  // 2. Obtaining Related Products
   const relatedProducts = await Product.find({
     category: product.category._id,
     _id: { $ne: product._id }
   })
-  .populate("category", "name slug") // <-- "name slug" ලෙස වෙනස් කළා
+  .populate("category", "name slug") // <-- Changed to "name slug".
   .populate("brand", "name")
   .limit(4);
 

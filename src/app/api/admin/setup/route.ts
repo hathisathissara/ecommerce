@@ -13,10 +13,10 @@ export async function GET() {
       return NextResponse.json({ message: "Admin already exists!" }, { status: 400 });
     }
 
-    // 2. Default Password එක Hash කරනවා
+    // 2. Hash the default password
     const hashedPassword = await bcrypt.hash("admin123", 10); 
 
-    // 3. පළවෙනි Admin Account එක සේව් කරනවා
+    // 3. Save the first Admin Account
     await Admin.create({
       name: "Super Admin",
       email: "admin@store.com",

@@ -3,7 +3,7 @@ import connectDB from "@/lib/db";
 import Setting from "@/models/Setting";
 import Link from "next/link";
 
-export const revalidate = 3600; // පැයකට වරක් Cache එක අලුත් කරයි (නීතිමය දත්ත නිතර වෙනස් නොවන නිසා)
+export const revalidate = 3600; // Refreshes cache once an hour (since legal data doesn't change often)
 
 export default async function PrivacyPolicyPage() {
   await connectDB();

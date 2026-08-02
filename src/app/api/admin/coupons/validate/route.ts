@@ -12,19 +12,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Code and amount are required" }, { status: 400 });
     }
 
-    // 1. කූපන් කෝඩ් එක Database එකෙන් සෙවීම
+    // 1. Searching the coupon code from the database
     const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
     
     if (!coupon) {
       return NextResponse.json({ error: "Invalid coupon code" }, { status: 400 });
     }
 
-    // 2. අවම බිල්පත් අගය සපුරා තිබේදැයි බැලීම
+    // 2. To see if the minimum billing value is met
     if (totalAmount < coupon.minOrderAmount) {
       return NextResponse.json({ error: `This coupon requires a minimum spend of LKR ${coupon.minOrderAmount}` }, { status: 400 });
     }
 
-    // 3. වට්ටම් මුදල (Discount Amount) ගණනය කිරීම
+    // 3. Calculation of Discount Amount
     let discountAmount = 0;
     if (coupon.discountType === "Percentage") {
       discountAmount = Math.round((totalAmount * coupon.discountValue) / 100);

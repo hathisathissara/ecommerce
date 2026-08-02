@@ -20,16 +20,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
-    // JWT Token එක හැදීම
+    // Creating the JWT Token
     const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET!, { expiresIn: "1d" });
 
-    // Next.js 15 වල cookies await කරන්න ඕනේ
+    // Next.js 15 cookies need to await
     const cookieStore = await cookies();
     cookieStore.set("admin_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 60 * 60 * 24, // දවස් 1ක්
+      maxAge: 60 * 60 * 24, // 1 day
       path: "/",
     });
 

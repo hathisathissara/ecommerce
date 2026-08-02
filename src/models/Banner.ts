@@ -6,7 +6,7 @@ const bannerSchema = new Schema(
     title: { type: String },
     subtitle: { type: String },
     image: { type: String, required: true }, // Cloudinary Image URL
-    link: { type: String }, // ක්ලික් කළ විට යා යුතු ලින්ක් එක (උදා: /products?category=perfumes)
+    link: { type: String }, // The link to go to when clicked (eg /products?category=perfumes)
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

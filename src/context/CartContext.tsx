@@ -20,8 +20,8 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   cartTotal: number;
-  isCartOpen: boolean; // <-- Cart Drawer එක ඕපන්ද නැද්ද යන්න
-  setIsCartOpen: (open: boolean) => void; // <-- Drawer එක ඕපන්/ක්ලෝස් කරන Function එක
+  isCartOpen: boolean; // <-- Whether the Cart Drawer is open or not
+  setIsCartOpen: (open: boolean) => void; // <-- The function that opens/closes the drawer
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prevItems, { ...item, quantity }];
     });
-    // බඩුවක් ඇඩ් කරපු ගමන් ඔටෝම දකුණු පැත්තෙන් Cart Drawer එක ඕපන් වෙනවා (Great UX!)
+    // After adding an item, the Cart Drawer will automatically open on the right side (Great UX!)
     setIsCartOpen(true);
   };
 

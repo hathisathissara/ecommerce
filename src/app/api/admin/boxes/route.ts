@@ -36,7 +36,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     await connectDB();
-    const { name, description, price, image } = await req.json(); // <-- description ලබාගනී
+    const { name, description, price, image } = await req.json(); // <-- Gets the description
 
     if (!name || !description || !price || !image) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     const newBox = await Box.create({ 
       name, 
-      description, // <-- Database සේව් වීම
+      description, // <-- Database server
       price: Number(price), 
       image 
     });
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     await connectDB();
-    const { boxId, name, description, price, image } = await req.json(); // <-- description ලබාගනී
+    const { boxId, name, description, price, image } = await req.json(); // <-- Gets the description
 
     if (!boxId || !name || !description || !price || !image) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
@@ -68,7 +68,7 @@ export async function PUT(req: Request) {
       boxId,
       { 
         name, 
-        description, // <-- Database යාවත්කාලීන වීම
+        description, // <-- Updating database
         price: Number(price), 
         image 
       },

@@ -7,7 +7,7 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login"); // Logout වුණාම ආයේ Login page එකට යනවා
+    router.push("/admin/login"); // When you log out, you will go back to the login page
   };
 
   return (

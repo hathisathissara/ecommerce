@@ -22,7 +22,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"All" | "Pending" | "Processing" | "Shipped" | "Cancelled">("All");
-  const router = useRouter(); // redirection සඳහා
+  const router = useRouter(); // For redirection
 
   const fetchOrders = async () => {
     try {
@@ -127,7 +127,7 @@ export default function AdminOrders() {
                       <tr 
                         key={order._id} 
                         className="hover:bg-gray-50/50 transition cursor-pointer"
-                        // ⚡ Row එකක් Click කළ සැනින් dynamic details page එකට යවයි ⚡
+                        // ⚡ Once a row is clicked, it will be sent to the dynamic details page ⚡
                         onClick={() => router.push(`/admin/orders/${order._id}`)}
                       >
                         <td className="p-4 font-mono font-bold text-gray-500">#{order._id.substring(18)}</td>

@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image"; // <-- Next.js Image import කළා [1]
+import Image from "next/image"; // <-- Next.js Image imported [1]
 
 interface BannerType {
   _id: string;

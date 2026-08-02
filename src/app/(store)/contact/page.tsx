@@ -16,7 +16,7 @@ export default async function ContactPage() {
     };
   }
 
-  // Mongoose settings object එක serializable JSON එකක් කිරීම
+  // Making the Mongoose settings object a serializable JSON
   const serializedSettings = JSON.parse(JSON.stringify(settings));
 
   return <ContactFormClient settings={serializedSettings} />;

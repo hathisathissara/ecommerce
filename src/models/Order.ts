@@ -24,7 +24,7 @@ const orderSchema = new Schema(
     couponCode: { type: String }, 
     discountAmount: { type: Number, default: 0 }, 
     paymentMethod: { type: String, enum: ["COD", "BankTransfer"], required: true },
-    bankSlip: { type: String }, // Cloudinary Image URL (Bank Transfer නම් පමණි)
+    bankSlip: { type: String }, // Cloudinary Image URL (Bank Transfer only)
     status: { type: String, enum: ["Pending", "Processing", "Shipped", "Cancelled"], default: "Pending" },
   },
   { timestamps: true }

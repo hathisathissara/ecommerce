@@ -23,7 +23,7 @@ const getPublicIdFromUrl = (url: string) => {
   }
 };
 
-// වට්ටම් මිල ගණනය කරන පොදු Helper එක (Percentage vs Fixed)
+// The common helper that calculates the discount price (Percentage vs Fixed)
 const calculateDiscountPrice = (price: number, val: number, type: string) => {
   if (!val || val <= 0) return null;
   if (type === "Percentage") {
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    // Base discount price ගණනය කිරීම
+    // Base discount price calculation
     const baseDiscountPrice = calculateDiscountPrice(Number(price), Number(discountValue), discountType);
 
     const newProduct = await Product.create({
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       trackInventory: Boolean(trackInventory),
       isGiftItem: Boolean(isGiftItem),
       images,
-      // Variants වල Discount pricesද ඔටෝම ගණනය කර සේව් කරයි
+      // Discount prices of variants are automatically calculated and served
       variants: (variants || []).map((v: any) => ({
         size: v.size || undefined,
         color: v.color || undefined,
@@ -156,7 +156,7 @@ export async function PUT(req: Request) {
       }
     }
 
-    // Base discount price ගණනය කිරීම
+    // Base discount price calculation
     const baseDiscountPrice = calculateDiscountPrice(Number(price), Number(discountValue), discountType);
 
     const updatedProduct = await Product.findByIdAndUpdate(

@@ -29,7 +29,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
   const [status, setStatus] = useState(order.status);
   const [updating, setUpdating] = useState(false);
 
-  // Status එක වෙනස් කිරීමේ Function එක
+  // The function of changing the status
   const handleStatusChange = async (newStatus: string) => {
     setUpdating(true);
     try {
@@ -62,7 +62,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
   return (
     <div className="min-h-screen bg-gray-50 p-6 sm:p-8 print:bg-white print:p-0">
       
-      {/* පින්ට් ස්ටයිල් ෂීට් එක */}
+      {/* Pint style sheet */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page {
@@ -89,7 +89,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
         }
       `}} />
 
-      {/* BROWSER DETAILED VIEW (පින්ට් කරද්දී print:hidden මඟින් සැඟවෙයි) */}
+      {/* BROWSER DETAILED VIEW (hidden by print:hidden when printing) */}
       <div className="max-w-4xl mx-auto space-y-6 print:hidden">
         
         {/* Back Button & Header */}
@@ -113,7 +113,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* වම් පස (col-span-2): Items & Delivery Info */}
+          {/* Left side (col-span-2): Items & Delivery Info */}
           <div className="md:col-span-2 space-y-6">
             
             {/* Customer Shipping info card */}
@@ -156,7 +156,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
             </div>
           </div>
 
-          {/* දකුණු පස: Status Updater & Pricing Summary */}
+          {/* Right side: Status Updater & Pricing Summary */}
           <div className="bg-white p-6 rounded-2xl border shadow-sm space-y-6 h-fit">
             
             {/* Status changer */}
@@ -221,7 +221,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
 
       </div>
 
-      {/* ⚡ 100% PRINT-FRIENDLY A4 DISPATCH INVOICE (මුද්‍රණය කරන විට පමණක් මතුවේ) ⚡ */}
+      {/* ⚡ 100% PRINT-FRIENDLY A4 DISPATCH INVOICE (only appears when printing) ⚡ */}
       <div className="hidden print:block print-container bg-white text-black p-10 space-y-8 text-sm font-sans w-[210mm] h-[297mm]">
         {/* Header Row */}
         <div className="flex justify-between items-start border-b-2 border-black pb-5">
@@ -315,7 +315,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
           </div>
         </div>
 
-        {/* ✂️ COURIER PACKAGE LABEL (කපා පාර්සලයේ ඇලවිය හැකි සජීවී ලේබලය) ✂️ */}
+        {/* ✂️ COURIER PACKAGE LABEL (Live label that can be cut and pasted on the parcel) ✂️ */}
         <div className="border-t-2 border-dashed border-gray-400 pt-10 mt-10">
           <p className="text-[10px] text-gray-400 font-semibold text-center mb-4 uppercase tracking-widest">✂️ Cut along this line and attach to the parcel package ✂️</p>
           

@@ -19,13 +19,13 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Cloudinary එකට Upload කිරීම (මෙහිදී Compress සහ WebP බවට පත් කිරීම සිදු කරයි)
+    // Uploading to Cloudinary (where Compress and Convert to WebP is done)
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         { 
           folder: "store_uploads",
-          format: "webp",      // 1. පින්තූරය WebP බවට පත් කරයි
-          quality: "auto",     // 2. පින්තූරයේ Quality එක ඔටෝ Compress කරයි (Size එක ගොඩක් අඩු වෙයි)
+          format: "webp",      // 1. Convert the image to WebP
+          quality: "auto",     // 2. The quality of the picture will be auto compressed (the size will be reduced a lot)
         }, 
         (error, result) => {
           if (error) reject(error);
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       uploadStream.end(buffer);
     });
 
-    // Cloudinary secure_url සමහරවිට පරණ extension එකම (e.g. .jpg) පෙන්විය හැක, ඒ නිසා අපි URL එකේ extension එක .webp වලට වෙනස් කරනවා
+    // Cloudinary secure_url may show the same old extension (e.g. .jpg), so we change the URL extension to .webp
     let finalUrl = (uploadResult as any).secure_url;
     finalUrl = finalUrl.replace(/\.[^/.]+$/, ".webp");
 

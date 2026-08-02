@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image"; // Next.js Image Component එක භාවිත කර ඇත [1]
+import Image from "next/image"; // Next.js Image Component used [1]
 
 interface CategoryType { _id: string; name: string; }
 interface BrandType { _id: string; name: string; }
@@ -180,7 +180,7 @@ export default function AdminProducts() {
     setIsModalOpen(true);
   };
 
-  // ⚡ Edit කරද්දී පරණ පින්තූරයක් එකින් එක ඉවත් කිරීමේ Function එක ⚡
+  // ⚡ The function of removing old pictures one by one during editing ⚡
   const handleRemoveExistingImage = (urlToDestroy: string) => {
     setExistingImages((prev) => prev.filter((img) => img !== urlToDestroy));
   };
@@ -624,7 +624,7 @@ export default function AdminProducts() {
                     </td>
                     <td className="p-3.5 font-bold text-gray-900">LKR {(prod.discountPrice || prod.price).toLocaleString()}</td>
                     
-                    {/* ⚡ සජීවීව තොග අනතුරු ඇඟවීම් Badges පෙන්වන තීරුව ⚡ */}
+                    {/* ⚡ Bar showing Live Stock Alert Badges ⚡ */}
                     <td className="p-3.5 text-xs text-gray-500 space-y-1.5">
                       {prod.variants && prod.variants.length > 0 ? (
                         <div className="space-y-2">

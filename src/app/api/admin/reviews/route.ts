@@ -2,9 +2,9 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Review from "@/models/Review";
-import Product from "@/models/Product"; // Product model එක register කිරීමට import කරගත යුතුය
+import Product from "@/models/Product"; // The product model must be imported to register
 
-// 1. සියලුම පාරිභෝගික අදහස් බලාගැනීම (GET)
+// 1. GET ALL CUSTOMER COMMENTS
 export async function GET() {
   try {
     await connectDB();
@@ -15,7 +15,7 @@ export async function GET() {
   }
 }
 
-// 2. නුසුදුසු අදහසක් Delete කිරීම (DELETE)
+// 2. Deleting an inappropriate comment (DELETE)
 export async function DELETE(req: Request) {
   try {
     await connectDB();
