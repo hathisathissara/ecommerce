@@ -243,7 +243,7 @@ export default function CheckoutPage() {
                   <p className="font-semibold">{item.name}</p>
                   <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                 </div>
-                <span className="font-bold">LKR {(item.discountPrice || item.price) * item.quantity}</span>
+                <span className="font-bold">LKR {((item.discountPrice || item.price) * item.quantity).toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -282,12 +282,12 @@ export default function CheckoutPage() {
           <div className="border-t pt-4 space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>LKR {cartTotal}</span>
+              <span>LKR {cartTotal.toFixed(2)}</span>
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between text-red-600">
                 <span>Discount ({appliedCoupon})</span>
-                <span>- LKR {discountAmount}</span>
+                <span>- LKR {discountAmount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between">
@@ -295,19 +295,19 @@ export default function CheckoutPage() {
               {deliveryCharge === 0 ? (
                 <span className="text-green-600 font-bold">FREE</span>
               ) : (
-                <span>LKR {deliveryCharge}</span>
+                <span>LKR {deliveryCharge.toFixed(2)}</span>
               )}
             </div>
             
             {dbSettings && cartTotal < dbSettings.freeDeliveryThreshold && (
               <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-xs text-blue-800 text-center font-semibold">
-                💡 Add <span className="font-bold">LKR {dbSettings.freeDeliveryThreshold - cartTotal}</span> more to get <span className="text-green-600 font-bold">FREE SHIPPING!</span>
+                💡 Add <span className="font-bold">LKR {(dbSettings.freeDeliveryThreshold - cartTotal).toFixed(2)}</span> more to get <span className="text-green-600 font-bold">FREE SHIPPING!</span>
               </div>
             )}
 
             <div className="flex justify-between items-center text-lg font-extrabold text-gray-900 border-t pt-2 mb-4">
               <span>Total Amount</span>
-              <span>LKR {finalTotal}</span>
+              <span>LKR {finalTotal.toFixed(2)}</span>
             </div>
           </div>
 
