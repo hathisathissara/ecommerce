@@ -100,6 +100,10 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
+# Email Configuration (from your Gmail)
+EMAIL_USER="[EMAIL_ADDRESS]"
+EMAIL_PASS="[APP PASSWORD]"
+
 # App URL (used for internal API calls)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
