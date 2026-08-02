@@ -22,13 +22,14 @@ A full-stack e-commerce web application built with **Next.js 16**, **MongoDB**, 
 | **Coupon / Promo Codes** | Apply discount codes at checkout (percentage or fixed amount) |
 | **Newsletter** | Email subscription captured and stored in the database |
 | **Free Shipping Banner** | Dynamic threshold fetched from admin settings |
+| **Legal Pages** | Auto-generated Privacy Policy, Terms of Service, and Refund Policy |
 
 ### 🔐 Admin Panel (`/admin`)
 
 | Section | Description |
 |---|---|
 | **Dashboard** | Live stats — total products, categories, orders, pending orders, recent activity |
-| **Products** | Add / edit / delete products with images (Cloudinary), variants (size, price, stock, SKU), category & brand linking |
+| **Products** | Add / edit / delete products with images (Cloudinary), variants (size, price, stock, SKU), dynamic stock warning badges, category & brand linking |
 | **Categories** | Create and manage product categories with images |
 | **Brands** | Manage brand list with logos |
 | **Boxes** | Manage gift box styles used in the Gift Builder |
@@ -105,35 +106,16 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 ### 4. Seed the Admin User
 
-You need to create the initial admin account in your MongoDB database. Use **MongoDB Compass** or the Mongo shell to insert a document into the `admins` collection:
+To automatically create your first admin account, start the development server (step 5) and navigate to the following URL in your browser:
 
-```js
-// In MongoDB shell or Compass
-db.admins.insertOne({
-  username: "admin",
-  // bcrypt hash of your password — generate at https://bcrypt-generator.com/ with 10 rounds
-  password: "$2b$10$your_bcrypt_hashed_password_here"
-})
-```
+`http://localhost:3000/api/admin/setup`
 
-Alternatively, you can create a one-time seed script:
+This will create the default admin account:
+- **Email:** `admin@store.com`
+- **Password:** `admin123`
 
-```ts
-// scripts/seed-admin.ts
-import bcrypt from "bcrypt";
-import connectDB from "@/lib/db";
-import Admin from "@/models/Admin";
-
-async function main() {
-  await connectDB();
-  const hash = await bcrypt.hash("your_password", 10);
-  await Admin.create({ username: "admin", password: hash });
-  console.log("Admin created!");
-  process.exit(0);
-}
-
-main();
-```
+> [!CAUTION]
+> **IMPORTANT SECURITY STEP:** Once the admin account is successfully created, you **must delete** the `src/app/api/admin/setup` folder immediately to prevent unauthorized users from exploiting this route in production.
 
 ### 5. Run the Development Server
 
