@@ -221,6 +221,9 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
                   <div className="space-y-2.5 text-sm">
                     <Link href="/track-order" className="block text-gray-400 hover:text-white transition">Track Your Order</Link>
                     <Link href="/contact" className="block text-gray-400 hover:text-white transition">Contact Us</Link>
+                    <Link href="/refund-policy" className="block text-gray-400 hover:text-white transition">Refund Policy</Link>
+                    <Link href="/terms-of-service" className="block text-gray-400 hover:text-white transition">Terms of Service</Link>
+                    <Link href="/privacy-policy" className="block text-gray-400 hover:text-white transition">Privacy Policy</Link>
                   </div>
                 </div>
 
