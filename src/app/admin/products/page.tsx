@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import Image from "next/image"; // Next.js Image Component එක භාවිත කර ඇත [1]
 
 interface CategoryType { _id: string; name: string; }
 interface BrandType { _id: string; name: string; }
@@ -93,8 +93,10 @@ export default function AdminProducts() {
   const [editingProductId, setEditingProductId] = useState("");
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Loading indicator for fetching
+  const [fetchLoading, setFetchLoading] = useState(true);
 
   const fetchData = async () => {
     setFetchLoading(true);
@@ -178,7 +180,7 @@ export default function AdminProducts() {
     setIsModalOpen(true);
   };
 
-  // ⚡ අතුරුදහන් වී තිබූ handleRemoveExistingImage function එක මෙතැනට ඇතුලත් කරන ලදී ⚡
+  // ⚡ Edit කරද්දී පරණ පින්තූරයක් එකින් එක ඉවත් කිරීමේ Function එක ⚡
   const handleRemoveExistingImage = (urlToDestroy: string) => {
     setExistingImages((prev) => prev.filter((img) => img !== urlToDestroy));
   };
@@ -385,7 +387,7 @@ export default function AdminProducts() {
                     <div>
                       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Brand</label>
                       <select value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs bg-white outline-none focus:ring-1 focus:ring-black">
-                        <option value="">No Brand (Select Brand)</option>
+                        <option value="No Brand (Select Brand)">No Brand (Select Brand)</option>
                         {brands.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}
                       </select>
                     </div>
@@ -528,7 +530,7 @@ export default function AdminProducts() {
                   {variants.length > 0 && (
                     <div className="bg-gray-50/50 p-3 rounded-xl border border-gray-100 space-y-2 max-h-40 overflow-y-auto">
                       {variants.map((v, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-xs text-gray-600 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                        <div key={idx} className="flex justify-between items-center text-[11px] text-gray-600 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
                           <div>
                             <span className="font-semibold block">
                               • {v.size || "N/A"} / {v.color || "N/A"} - LKR {Number(v.price).toLocaleString()} (Stock: {v.stock})
@@ -592,6 +594,7 @@ export default function AdminProducts() {
                   <th className="p-3.5">Image</th>
                   <th className="p-3.5">Product Info</th>
                   <th className="p-3.5">Price</th>
+                  {/* table head dynamic update */}
                   <th className="p-3.5">Stock & Variants</th>
                   <th className="p-3.5 text-center">Actions</th>
                 </tr>
@@ -608,23 +611,68 @@ export default function AdminProducts() {
                       <p className="font-bold text-gray-900">{prod.name}</p>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="inline-block text-[9px] bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded font-bold uppercase">{prod.category?.name}</span>
-                        <span className="inline-block text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase">{prod.brand?.name || "No Brand"}</span>
-                        {prod.sku && <span className="inline-block text-[9px] bg-gray-900/5 text-gray-600 px-1.5 py-0.5 rounded font-mono font-bold">SKU: {prod.sku}</span>}
+                        {/* Brand Badge display - No Brand fallback added */}
+                        <span className="inline-block text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase">
+                          {prod.brand?.name || "No Brand"}
+                        </span>
+                        {prod.sku && (
+                          <span className="inline-block text-[9px] bg-gray-900/5 text-gray-600 px-1.5 py-0.5 rounded font-mono font-bold">
+                            SKU: {prod.sku}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-3.5 font-bold text-gray-900">LKR {(prod.discountPrice || prod.price).toLocaleString()}</td>
-                    <td className="p-3.5 text-[11px] text-gray-500 space-y-1.5">
+                    
+                    {/* ⚡ සජීවීව තොග අනතුරු ඇඟවීම් Badges පෙන්වන තීරුව ⚡ */}
+                    <td className="p-3.5 text-xs text-gray-500 space-y-1.5">
                       {prod.variants && prod.variants.length > 0 ? (
-                        prod.variants.map((v, i) => (
-                          <div key={i} className="font-semibold text-gray-600 border-b last:border-0 pb-1.5 last:pb-0">
-                            <p>• {v.size || "N/A"} / {v.color || "N/A"}: <span className={v.stock <= 0 ? "text-red-500 font-bold" : "text-green-600"}>{v.stock} left</span></p>
-                            {v.sku && <p className="text-[9px] text-gray-400 font-mono">SKU: {v.sku}</p>}
-                          </div>
-                        ))
+                        <div className="space-y-2">
+                          {prod.variants.map((v, i) => {
+                            const isOut = v.stock <= 0;
+                            const isLow = v.stock <= (prod.lowStockAlert || 5);
+                            return (
+                              <div key={i} className="border-b border-gray-100 pb-2 last:border-0 last:pb-0 space-y-1">
+                                <p className="font-bold text-gray-700">• {v.size || "N/A"} / {v.color || "N/A"}:</p>
+                                <div className="pl-3 space-y-1">
+                                  {isOut ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-extrabold uppercase">
+                                      🚨 Out of Stock
+                                    </span>
+                                  ) : isLow ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-extrabold uppercase animate-pulse">
+                                      ⚠️ Low Stock ({v.stock} left)
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-[9px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">
+                                      🟢 {v.stock} left
+                                    </span>
+                                  )}
+                                  {v.sku && <p className="text-[9px] text-gray-400 font-mono">SKU: {v.sku}</p>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       ) : (
-                        <p className="font-semibold text-gray-600">Base Stock: <span className={prod.stock <= 0 ? "text-red-500 font-bold" : "text-green-600"}>{prod.stock} left</span></p>
+                        <div className="space-y-1">
+                          {prod.stock <= 0 ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-600 px-2 py-1 rounded-full font-extrabold uppercase tracking-wide">
+                              🚨 OUT OF STOCK
+                            </span>
+                          ) : prod.stock <= (prod.lowStockAlert || 5) ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] bg-amber-50 text-amber-700 px-2 py-1 rounded-full font-extrabold uppercase tracking-wide animate-pulse">
+                              ⚠️ Low Stock ({prod.stock} left)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wide">
+                              🟢 In Stock ({prod.stock} left)
+                            </span>
+                          )}
+                        </div>
                       )}
                     </td>
+
                     <td className="p-3.5 text-center">
                       <div className="inline-flex items-center gap-1.5">
                         <button onClick={() => handleEditClick(prod)} className="bg-gray-50 hover:bg-gray-900 hover:text-white border px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Edit</button>

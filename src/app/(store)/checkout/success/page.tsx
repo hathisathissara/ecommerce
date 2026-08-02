@@ -46,6 +46,15 @@ function SuccessContent() {
     fetchOrder();
   }, [orderId]);
 
+  const subtotal = order?.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+  const shippingFee = order?.shippingFee || 0;
+  const totalAmount = order?.totalAmount || 0;
+  
+  let discountAmount = order?.discountAmount || 0;
+  if (discountAmount === 0 && subtotal + shippingFee > totalAmount) {
+    discountAmount = subtotal + shippingFee - totalAmount;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 print:bg-white print:p-0">
       
@@ -132,8 +141,22 @@ function SuccessContent() {
                     {item.description && <p className="text-[10px] text-gray-400 whitespace-pre-line mt-1">{item.description}</p>}
                   </td>
                   <td className="p-3 text-center font-bold">{item.quantity}</td>
-                  <td className="p-3 text-right">LKR {item.price.toLocaleString()}</td>
-                  <td className="p-3 text-right font-bold">LKR {(item.price * item.quantity).toLocaleString()}</td>
+                  <td className="p-3 text-right">
+                    <div>LKR {item.price.toLocaleString()}</div>
+                    {discountAmount > 0 && (
+                      <div className="text-[10px] text-gray-500 mt-0.5">
+                        Discounted: LKR {(item.price - (item.price / subtotal) * discountAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </div>
+                    )}
+                  </td>
+                  <td className="p-3 text-right font-bold">
+                    <div>LKR {(item.price * item.quantity).toLocaleString()}</div>
+                    {discountAmount > 0 && (
+                      <div className="text-[10px] text-red-500 mt-0.5 font-normal">
+                        - LKR {((item.price * item.quantity / subtotal) * discountAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
