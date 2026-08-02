@@ -2,6 +2,7 @@
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
+import Brand from "@/models/Brand"; // Import Brand model
 import FilterBar from "@/components/FilterBar";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
@@ -11,13 +12,22 @@ export const revalidate = 10;
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; search?: string; availability?: string; sort?: string; giftsByPrice?: string; giftIdeas?: string }>;
+  searchParams: Promise<{ 
+    category?: string; 
+    search?: string; 
+    availability?: string; 
+    sort?: string; 
+    giftsByPrice?: string; 
+    giftIdeas?: string;
+    brand?: string; // Add brand parameter to searchParams
+  }>;
 }) {
   await connectDB();
-  const { category, search, availability, sort, giftsByPrice, giftIdeas } = await searchParams;
+  const { category, search, availability, sort, giftsByPrice, giftIdeas, brand } = await searchParams;
 
   const query: {
     category?: string;
+    brand?: string; // Declare brand inside query type
     $or?: Array<{ name?: { $regex: string; $options: string }; description?: { $regex: string; $options: string } }>;
     stockStatus?: string;
     price?: { $lt?: number; $gte?: number; $lte?: number; $gt?: number };
@@ -25,6 +35,7 @@ export default async function ProductsPage({
   } = {};
   let activeCategoryName = "All Products";
 
+  // Filter products by selected Category slug
   if (category) {
     const foundCategory = await Category.findOne({ slug: category });
     if (foundCategory) {
@@ -33,6 +44,16 @@ export default async function ProductsPage({
     }
   }
 
+  // Filter products by selected Brand slug (Triggers on Home Page Brand Logo clicks)
+  if (brand) {
+    const foundBrand = await Brand.findOne({ slug: brand });
+    if (foundBrand) {
+      query.brand = foundBrand._id.toString();
+      activeCategoryName = foundBrand.name;
+    }
+  }
+
+  // Filter products by live search term
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: "i" } },
@@ -40,12 +61,14 @@ export default async function ProductsPage({
     ];
   }
 
+  // Filter products by stock availability status
   if (availability === "in-stock") {
     query.stockStatus = "In Stock";
   } else if (availability === "out-of-stock") {
     query.stockStatus = "Out of Stock";
   }
 
+  // Filter products by price range boundaries
   if (giftsByPrice) {
     if (giftsByPrice === "under-5000") {
       query.price = { $lt: 5000 };
@@ -56,6 +79,7 @@ export default async function ProductsPage({
     }
   }
 
+  // Filter products by gift tags suggestions
   if (giftIdeas) {
     if (giftIdeas === "for-him") {
       query.tags = { $in: ["For Him", "for him", "Men", "men"] };
@@ -66,12 +90,12 @@ export default async function ProductsPage({
     }
   }
 
-  // Sort logic
+  // Sort logic configuration
   let sortQuery: Record<string, 1 | -1> = { createdAt: -1 };
   switch (sort) {
     case "best-selling":
-      // Since there's no sold count, fallback to newest or add a placeholder
-      sortQuery = { createdAt: -1 };
+      // Now dynamically sorts by the actual sales count tracked on checkout!
+      sortQuery = { salesCount: -1 };
       break;
     case "oldest":
       sortQuery = { createdAt: 1 };
@@ -94,7 +118,11 @@ export default async function ProductsPage({
       break;
   }
 
-  const products = await Product.find(query).populate("category", "name").sort(sortQuery);
+  // Fetch products from database with populated fields
+  const products = await Product.find(query)
+    .populate("category", "name")
+    .populate("brand", "name") // Populate brand name
+    .sort(sortQuery);
   const categories = await Category.find({ isActive: true });
 
   const serializedCategories = JSON.parse(JSON.stringify(categories));
