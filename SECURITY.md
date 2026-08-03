@@ -13,7 +13,7 @@ The following versions of our e-commerce platform receive active security update
 
 If you find a security vulnerability or bug in this project, **please do not open a public GitHub issue**. Instead, report it responsibly by emailing us privately at:
 
-**hatheesha6504@gmail.com** (or your primary contact email)
+**hatheesha6504@gmail.com**
 
 Please include:
 - A detailed description of the vulnerability.
