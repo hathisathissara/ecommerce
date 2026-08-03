@@ -2,20 +2,22 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+The following versions of our e-commerce platform receive active security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you find a security vulnerability or bug in this project, **please do not open a public GitHub issue**. Instead, report it responsibly by emailing us privately at:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+**hatheesha6504@gmail.com** (or your primary contact email)
+
+Please include:
+- A detailed description of the vulnerability.
+- Detailed steps to reproduce the issue.
+- Potential impact of the bug.
+
+We will acknowledge your report within 48 hours and work with you to patch the vulnerability as quickly as possible. Thank you for keeping our store secure!
