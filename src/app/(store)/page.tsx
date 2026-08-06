@@ -11,7 +11,38 @@ import NewsletterBox from "@/components/NewsletterBox";
 import Link from "next/link";
 import Image from "next/image";
 
+import Setting from "@/models/Setting";
+import type { Metadata } from "next";
+
 export const revalidate = 10; // Revalidate dynamic cache data every 10 seconds
+
+export async function generateMetadata(): Promise<Metadata> {
+  await connectDB();
+  const settings = await Setting.findOne();
+  const activeBanner = await Banner.findOne({ isActive: true });
+
+  const siteTitle = settings?.storeName || "The Store";
+  const defaultDesc = "Explore our premium collection of imported luxury perfumes, cosmetics, and custom gift boxes in Sri Lanka.";
+  
+  // Use the first active banner image as the OG Image, or fallback to logo
+  const ogImage = activeBanner?.image || settings?.logo || "/og-image.jpg";
+
+  return {
+    title: `${siteTitle} | Home`,
+    description: defaultDesc,
+    openGraph: {
+      title: `${siteTitle} | Luxury Perfumes & Cosmetics`,
+      description: defaultDesc,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+  };
+}
 
 export default async function StoreHome() {
   await connectDB();

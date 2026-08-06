@@ -6,8 +6,59 @@ import Brand from "@/models/Brand"; // Import Brand model
 import FilterBar from "@/components/FilterBar";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
+import type { Metadata } from "next";
+import Setting from "@/models/Setting";
 
 export const revalidate = 10;
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; brand?: string; search?: string }>;
+}): Promise<Metadata> {
+  await connectDB();
+  const { category, brand, search } = await searchParams;
+  const settings = await Setting.findOne();
+  const siteTitle = settings?.storeName || "The Store";
+
+  let title = "Shop All Products";
+  let description = "Browse our full collection of luxury perfumes, cosmetics, and more.";
+  let ogImage = settings?.logo || "/og-image.jpg";
+
+  if (category) {
+    const foundCategory = await Category.findOne({ slug: category });
+    if (foundCategory) {
+      title = `${foundCategory.name} | ${siteTitle}`;
+      description = `Shop our premium collection of ${foundCategory.name} at ${siteTitle}.`;
+      if (foundCategory.image) ogImage = foundCategory.image;
+    }
+  } else if (brand) {
+    const foundBrand = await Brand.findOne({ slug: brand });
+    if (foundBrand) {
+      title = `${foundBrand.name} | ${siteTitle}`;
+      description = `Explore the best of ${foundBrand.name} at ${siteTitle}.`;
+      if (foundBrand.image) ogImage = foundBrand.image;
+    }
+  } else if (search) {
+    title = `Search results for "${search}" | ${siteTitle}`;
+  }
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+  };
+}
 
 export default async function ProductsPage({
   searchParams,
