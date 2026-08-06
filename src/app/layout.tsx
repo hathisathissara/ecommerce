@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       images: [
         {
-          url: "/og-image.jpg",
+          url: "/og-image.png",
           width: 1200,
           height: 630,
           alt: `${siteTitle} - Luxury Perfumes & Cosmetics`,
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: `${siteTitle} | Luxury Perfumes & Cosmetics`,
       description: "Explore our premium collection of imported luxury perfumes and cosmetics.",
-      images: ["/og-image.jpg"],
+      images: ["/og-image.png"],
     },
   };
 }

@@ -23,7 +23,7 @@ export async function generateMetadata({
 
   let title = "Shop All Products";
   let description = "Browse our full collection of luxury perfumes, cosmetics, and more.";
-  let ogImage = settings?.logo || "/og-image.jpg";
+  let ogImage = settings?.logo || "/og-image.png";
 
   if (category) {
     const foundCategory = await Category.findOne({ slug: category });
