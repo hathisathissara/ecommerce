@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const defaultDesc = "Explore our premium collection of imported luxury perfumes, cosmetics, and custom gift boxes in Sri Lanka.";
   
   // Use the first active banner image as the OG Image, or fallback to logo
-  const ogImage = activeBanner?.image || settings?.logo || "/og-image.jpg";
+  const ogImage = activeBanner?.image || settings?.logo || "/og-image.png";
 
   return {
     title: `${siteTitle} | Home`,
@@ -134,7 +134,7 @@ export default async function StoreHome() {
             
             {/* Horizontal scrollable brands container */}
             <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] snap-x">
-              {serializedBrands.map((brand: any) => (
+              {serializedBrands.map((brand: { _id: string; slug: string; name: string; image: string }) => (
                 <Link
                   href={`/products?brand=${brand.slug}`}
                   key={brand._id}
@@ -178,7 +178,7 @@ export default async function StoreHome() {
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {serializedFlashOffers.map((prod: any) => (
+              {serializedFlashOffers.map((prod: { _id: string; name: string; slug: string; price: number; discountPrice?: number; images: string[]; category?: { name: string } }) => (
                 <ProductCard key={prod._id} product={prod} />
               ))}
             </div>
@@ -201,7 +201,7 @@ export default async function StoreHome() {
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {serializedBestSellers.map((prod: any) => (
+              {serializedBestSellers.map((prod: { _id: string; name: string; slug: string; price: number; discountPrice?: number; images: string[]; category?: { name: string } }) => (
                 <ProductCard key={prod._id} product={prod} />
               ))}
             </div>
@@ -220,7 +220,7 @@ export default async function StoreHome() {
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {serializedNewArrivals.map((prod: any) => (
+            {serializedNewArrivals.map((prod: { _id: string; name: string; slug: string; price: number; discountPrice?: number; images: string[]; category?: { name: string } }) => (
               <ProductCard key={prod._id} product={prod} />
             ))}
           </div>
@@ -237,7 +237,7 @@ export default async function StoreHome() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {serializedTestimonials.map((rev: any) => (
+              {serializedTestimonials.map((rev: { _id: string; name: string; rating: number; comment: string; createdAt: string; product?: { name: string } }) => (
                 <div key={rev._id} className="bg-gray-50/50 p-6 rounded-2xl border flex flex-col justify-between h-44 hover:shadow-sm transition">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
