@@ -47,15 +47,52 @@ const calculateDiscountPrice = (price: number, val: number, type: string) => {
 void Category;
 void Brand;
 
-// 1. GET - Fetch all products
-export async function GET() {
+// 1. GET - Fetch products (with pagination and search)
+export async function GET(req: NextRequest) {
   try {
     await connectDB();
-    const products = await Product.find()
-      .populate("category", "name")
-      .populate("brand", "name")
-      .sort({ createdAt: -1 });
-    return NextResponse.json(products, { status: 200 });
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const search = searchParams.get("search") || "";
+
+    let query: Record<string, unknown> = {};
+
+    if (search) {
+      // Find matching categories first to include in the $or array
+      const matchingCategories = await Category.find({ name: { $regex: search, $options: "i" } }).select("_id");
+      const categoryIds = matchingCategories.map(c => c._id);
+      
+      query = {
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { sku: { $regex: search, $options: "i" } },
+          { "variants.sku": { $regex: search, $options: "i" } },
+          ...(categoryIds.length > 0 ? [{ category: { $in: categoryIds } }] : [])
+        ]
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate("category", "name")
+        .populate("brand", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Product.countDocuments(query)
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({
+      products,
+      total,
+      page,
+      totalPages
+    }, { status: 200 });
   } catch (error) {
     console.error("GET Products Error:", error);
     return NextResponse.json({ error: "Failed to fetch products", details: String(error) }, { status: 500 });

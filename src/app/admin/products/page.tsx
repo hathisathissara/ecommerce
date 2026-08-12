@@ -33,18 +33,36 @@ interface ProductType {
 export default function AdminProducts() {
   const router = useRouter();
   const [products, setProducts] = useState<ProductType[]>([]);
-  // Search, Loading
+  // Pagination & Search
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const limit = 10;
+  
   // Loading indicator for fetching
   const [fetchLoading, setFetchLoading] = useState(true);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset page on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const fetchData = async (page: number, search: string) => {
     setFetchLoading(true);
     try {
-      const prodRes = await fetch("/api/admin/products");
+      const prodRes = await fetch(`/api/admin/products?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
       
-      if (prodRes.ok) setProducts(await prodRes.json());
+      if (prodRes.ok) {
+        const data = await prodRes.json();
+        setProducts(data.products || []);
+        setTotalProducts(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      }
     } catch (err) {
       console.error("Error loading data", err);
     } finally {
@@ -53,8 +71,11 @@ export default function AdminProducts() {
   };
 
   useEffect(() => {
-    setTimeout(() => fetchData(), 0);
-  }, []);
+    const timer = setTimeout(() => {
+      fetchData(currentPage, debouncedSearch);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [currentPage, debouncedSearch]);
 
 
   const handleDeleteClick = async (id: string) => {
@@ -62,20 +83,12 @@ export default function AdminProducts() {
     try {
       const res = await fetch(`/api/admin/products?id=${id}`, { method: "DELETE" });
       if (res.ok) {
-        fetchData();
+        fetchData(currentPage, debouncedSearch);
       }
     } catch (err) {
       console.error("Failed to delete product", err);
     }
   };
-
-  const filteredProducts = products.filter((prod) => {
-    const matchesName = prod.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = prod.category?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSku = prod.sku?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesVariantSku = prod.variants?.some(v => v.sku?.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesName || matchesCategory || matchesSku || matchesVariantSku;
-  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-h-screen">
@@ -106,13 +119,13 @@ export default function AdminProducts() {
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-5">
           <div>
-            <h2 className="text-base sm:text-lg font-black text-gray-900">Products Inventory ({filteredProducts.length})</h2>
+            <h2 className="text-base sm:text-lg font-black text-gray-900">Products Inventory ({totalProducts})</h2>
             <p className="text-xs text-gray-400 mt-1">Review catalog items, prices, and stock statuses.</p>
           </div>
           <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search Name, Category or SKU..." className="px-4 py-2.5 border rounded-xl text-xs outline-none focus:ring-1 focus:ring-gray-900 w-full sm:w-64 bg-white text-gray-900" />
         </div>
 
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
           <p className="text-gray-500 text-center py-10 text-xs italic">No matching products found.</p>
         ) : (
           <div className="overflow-x-auto border border-gray-100 rounded-2xl">
@@ -128,7 +141,7 @@ export default function AdminProducts() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredProducts.map((prod) => (
+                {products.map((prod) => (
                   <tr key={prod._id} className="hover:bg-gray-50/50 transition">
                     <td className="p-3.5">
                       <div className="w-10 h-10 rounded-lg overflow-hidden border relative bg-gray-50 flex-shrink-0">
@@ -155,7 +168,7 @@ export default function AdminProducts() {
                     {/* ⚡ Bar showing Live Stock Alert Badges ⚡ */}
                     <td className="p-3.5 text-xs text-gray-500 space-y-1.5">
                       {prod.variants && prod.variants.length > 0 ? (
-                        <div className="space-y-2">
+                        <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                           {prod.variants.map((v, i) => {
                             const isOut = v.stock <= 0;
                             const isLow = v.stock <= (prod.lowStockAlert || 5);
@@ -211,6 +224,31 @@ export default function AdminProducts() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100">
+            <p className="text-xs text-gray-500 font-medium">
+              Showing page <span className="font-bold text-gray-900">{currentPage}</span> of <span className="font-bold text-gray-900">{totalPages}</span>
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
