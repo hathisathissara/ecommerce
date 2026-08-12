@@ -1,5 +1,6 @@
 // src/app/api/admin/products/route.ts
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
@@ -18,10 +19,20 @@ const getPublicIdFromUrl = (url: string) => {
     if (parts.length < 2) return null;
     const relativePath = parts[1].replace(/^v\d+\//, "");
     return relativePath.split(".")[0];
-  } catch (err) {
+  } catch {
     return null;
   }
 };
+
+interface VariantInput {
+  size?: string;
+  color?: string;
+  price: string | number;
+  discountValue?: string | number;
+  discountType?: "Percentage" | "Fixed";
+  stock?: string | number;
+  sku?: string;
+}
 
 // The common helper that calculates the discount price (Percentage vs Fixed)
 const calculateDiscountPrice = (price: number, val: number, type: string) => {
@@ -31,6 +42,10 @@ const calculateDiscountPrice = (price: number, val: number, type: string) => {
   }
   return price - val;
 };
+
+// Prevent tree shaking of Mongoose models
+void Category;
+void Brand;
 
 // 1. GET - Fetch all products
 export async function GET() {
@@ -42,7 +57,8 @@ export async function GET() {
       .sort({ createdAt: -1 });
     return NextResponse.json(products, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
+    console.error("GET Products Error:", error);
+    return NextResponse.json({ error: "Failed to fetch products", details: String(error) }, { status: 500 });
   }
 }
 
@@ -95,7 +111,7 @@ export async function POST(req: Request) {
       isGiftItem: Boolean(isGiftItem),
       images,
       // Discount prices of variants are automatically calculated and served
-      variants: (variants || []).map((v: any) => ({
+      variants: (variants || []).map((v: VariantInput) => ({
         size: v.size || undefined,
         color: v.color || undefined,
         price: Number(v.price),
@@ -183,7 +199,7 @@ export async function PUT(req: Request) {
         trackInventory: Boolean(trackInventory),
         isGiftItem: Boolean(isGiftItem),
         images,
-        variants: (variants || []).map((v: any) => ({
+        variants: (variants || []).map((v: VariantInput) => ({
           size: v.size || undefined,
           color: v.color || undefined,
           price: Number(v.price),
