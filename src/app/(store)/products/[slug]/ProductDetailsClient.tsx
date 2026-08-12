@@ -61,6 +61,15 @@ interface ReviewType {
 export default function ProductDetailsClient({ product, relatedProducts }: ProductProps) {
   const [activeImage, setActiveImage] = useState(product.images[0]);
   const [quantity, setQuantity] = useState(1);
+  const [activeProductId, setActiveProductId] = useState(product._id);
+
+  // Reset state when product changes (instead of inside useEffect to avoid cascading renders)
+  if (product._id !== activeProductId) {
+    setActiveProductId(product._id);
+    setActiveImage(product.images[0]);
+    setQuantity(1);
+  }
+
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
@@ -78,11 +87,39 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
   // Multi-Attribute Variants (Size & Color)
   const hasVariants = product.variants && product.variants.length > 0;
 
-  const availableSizes = hasVariants ? Array.from(new Set(product.variants!.map((v) => v.size).filter(Boolean))) : [];
-  const availableColors = hasVariants ? Array.from(new Set(product.variants!.map((v) => v.color).filter(Boolean))) : [];
+  // All unique sizes & colors across all variants
+  const allSizes = hasVariants ? Array.from(new Set(product.variants!.map((v) => v.size).filter(Boolean))) as string[] : [];
+  const allColors = hasVariants ? Array.from(new Set(product.variants!.map((v) => v.color).filter(Boolean))) as string[] : [];
 
-  const [selectedSize, setSelectedSize] = useState<string>(availableSizes.length > 0 ? (availableSizes[0] as string) : "");
-  const [selectedColor, setSelectedColor] = useState<string>(availableColors.length > 0 ? (availableColors[0] as string) : "");
+  const [selectedSize, setSelectedSize] = useState<string>(allSizes.length > 0 ? allSizes[0] : "");
+  const [selectedColor, setSelectedColor] = useState<string>(allColors.length > 0 ? allColors[0] : "");
+
+  // ⚡ Filter available sizes for current color & available colors for current size ⚡
+  const sizesForSelectedColor = hasVariants && selectedColor
+    ? Array.from(new Set(product.variants!.filter((v) => v.color === selectedColor).map((v) => v.size).filter(Boolean))) as string[]
+    : allSizes;
+
+  const colorsForSelectedSize = hasVariants && selectedSize
+    ? Array.from(new Set(product.variants!.filter((v) => v.size === selectedSize).map((v) => v.color).filter(Boolean))) as string[]
+    : allColors;
+
+  // When color changes, auto-select first available size for that color
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    const sizesForColor = product.variants!.filter((v) => v.color === color).map((v) => v.size).filter(Boolean) as string[];
+    if (sizesForColor.length > 0 && !sizesForColor.includes(selectedSize)) {
+      setSelectedSize(sizesForColor[0]);
+    }
+  };
+
+  // When size changes, auto-select first available color for that size
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+    const colorsForSize = product.variants!.filter((v) => v.size === size).map((v) => v.color).filter(Boolean) as string[];
+    if (colorsForSize.length > 0 && !colorsForSize.includes(selectedColor)) {
+      setSelectedColor(colorsForSize[0]);
+    }
+  };
 
   // ⚡ React 19 Best Practice: calculates the variant directly in the render cycle without a useEffect ⚡ [2]
   const selectedVariant = hasVariants
@@ -110,11 +147,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
   // Loading related reviews when the Mongoose product changes (exhaustive deps are safe)
   useEffect(() => {
+    // eslint-disable-next-line
     fetchReviews();
-    setActiveImage(product.images[0]);
-    setQuantity(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product._id, product.images]);
+  }, [product._id]);
 
   const currentPrice = selectedVariant ? selectedVariant.price : product.price;
   const currentDiscountPrice = selectedVariant ? selectedVariant.discountPrice : product.discountPrice;
@@ -294,37 +330,45 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
 
             {hasVariants && (
               <div className="space-y-4 border-t border-b py-4 border-gray-100">
-                {availableColors.length > 0 && (
+                {allColors.length > 0 && (
                   <div className="space-y-2">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Color Option</span>
                     <div className="flex flex-wrap gap-2">
-                      {availableColors.map((color, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setSelectedColor(color as string)}
-                          className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition ${selectedColor === color ? "border-black bg-black text-white" : "border-gray-200 hover:border-gray-300"}`}
-                        >
-                          {color}
-                        </button>
-                      ))}
+                      {allColors.map((color, idx) => {
+                        const isAvailable = colorsForSelectedSize.includes(color);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleColorChange(color)}
+                            disabled={!isAvailable}
+                            className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition ${selectedColor === color ? "border-black bg-black text-white" : isAvailable ? "border-gray-200 hover:border-gray-300" : "border-gray-100 text-gray-300 cursor-not-allowed line-through opacity-50"}`}
+                          >
+                            {color}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
-                {availableSizes.length > 0 && (
+                {allSizes.length > 0 && (
                   <div className="space-y-2">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Size Option</span>
                     <div className="flex flex-wrap gap-2">
-                      {availableSizes.map((size, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setSelectedSize(size as string)}
-                          className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition ${selectedSize === size ? "border-black bg-black text-white" : "border-gray-200 hover:border-gray-300"}`}
-                        >
-                          {size}
-                        </button>
-                      ))}
+                      {allSizes.map((size, idx) => {
+                        const isAvailable = sizesForSelectedColor.includes(size);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSizeChange(size)}
+                            disabled={!isAvailable}
+                            className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition ${selectedSize === size ? "border-black bg-black text-white" : isAvailable ? "border-gray-200 hover:border-gray-300" : "border-gray-100 text-gray-300 cursor-not-allowed line-through opacity-50"}`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -387,7 +431,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
           {["description", "specs", "shipping", "reviews"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab(tab as "description" | "specs" | "shipping" | "reviews")}
               className={`transition pb-3 relative ${activeTab === tab ? "text-black border-b-2 border-black" : "hover:text-black"}`}
             >
               {tab === "specs" ? "Specifications" : tab}
@@ -433,7 +477,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: Produ
                 <form onSubmit={handleReviewSubmit} className="space-y-4 text-xs">
                   <div>
                     <label className="block text-xs font-semibold mb-1">Your Name</label>
-                    <input type="text" value={revName} onChange={(e) => setRevName(setRevName as any)} required placeholder="e.g. John Doe" className="w-full p-2.5 border rounded-lg outline-none bg-white focus:ring-1 focus:ring-black" />
+                    <input type="text" value={revName} onChange={(e) => setRevName(e.target.value)} required placeholder="e.g. John Doe" className="w-full p-2.5 border rounded-lg outline-none bg-white focus:ring-1 focus:ring-black" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1">Rating (Stars)</label>
