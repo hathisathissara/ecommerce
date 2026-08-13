@@ -47,7 +47,7 @@ function StoreHeader({ settings }: { settings: Settings }) {
     >
       {/* Top announcement bar */}
       <div className="bg-gray-900 text-white text-center py-1.5 px-4 text-[11px] tracking-widest uppercase font-medium">
-        ✨ Free Shipping on Orders Over LKR {(settings.freeDeliveryThreshold || 5000).toLocaleString()} &nbsp;|&nbsp; Premium Imports
+        Free Shipping on All Orders Over LKR {(settings.freeDeliveryThreshold || 5000).toLocaleString()}!
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
