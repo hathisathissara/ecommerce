@@ -18,12 +18,24 @@ interface BoxType {
 }
 
 interface VariantType {
-  size: string;
+  _id?: string;
+  size?: string;
+  color?: string;
   price: number;
   discountPrice?: number;
   stock: number;
   sku?: string;
 }
+
+const getVariantLabel = (v: VariantType) => {
+  if (v.color) {
+    if (v.size && v.size !== "One Size" && v.size !== "None" && v.size.trim() !== "") {
+      return `${v.color} - ${v.size}`;
+    }
+    return v.color;
+  }
+  return v.size || "Standard";
+};
 
 interface ProductType {
   _id: string;
@@ -93,7 +105,7 @@ export default function GiftBuilder() {
   };
 
   const handleToggleItem = (product: ProductType, variant: VariantType | null) => {
-    const uniqueId = variant ? `${product._id}-${variant.size}` : product._id;
+    const uniqueId = variant ? `${product._id}-${variant._id || getVariantLabel(variant)}` : product._id;
 
     setSelectedItems((prev) => {
       const exists = prev.find((i) => i._id === uniqueId);
@@ -130,7 +142,7 @@ export default function GiftBuilder() {
     
     const itemDetails = selectedItems
       .map((i) => {
-        const name = i.selectedVariant ? `${i.product.name} (${i.selectedVariant.size})` : i.product.name;
+        const name = i.selectedVariant ? `${i.product.name} (${getVariantLabel(i.selectedVariant)})` : i.product.name;
         return `${name} (x${i.quantity})`;
       })
       .join(", ");
@@ -290,7 +302,7 @@ export default function GiftBuilder() {
                       const hasVariants = prod.variants && prod.variants.length > 0;
                       const currentVariant = activeVariants[prod._id] || (hasVariants ? prod.variants![0] : null);
                       
-                      const uniqueId = currentVariant ? `${prod._id}-${currentVariant.size}` : prod._id;
+                      const uniqueId = currentVariant ? `${prod._id}-${currentVariant._id || getVariantLabel(currentVariant)}` : prod._id;
                       const selectedItem = selectedItems.find((i) => i._id === uniqueId);
 
                       const displayPrice = currentVariant
@@ -326,12 +338,12 @@ export default function GiftBuilder() {
                                     type="button"
                                     onClick={() => handleSelectVariant(prod._id, v)}
                                     className={`px-1.5 py-0.5 border rounded text-[9px] font-bold transition ${
-                                      currentVariant?.size === v.size
+                                      (currentVariant?._id && currentVariant._id === v._id) || (!currentVariant?._id && currentVariant && getVariantLabel(currentVariant) === getVariantLabel(v))
                                         ? "border-black bg-black text-white"
                                         : "border-gray-200 hover:border-gray-300 bg-white"
                                     }`}
                                   >
-                                    {v.size}
+                                    {getVariantLabel(v)}
                                   </button>
                                 ))}
                               </div>
@@ -495,7 +507,7 @@ export default function GiftBuilder() {
                   <ul className="space-y-2 border-b border-gray-200 pb-3">
                     {selectedItems.map((item) => {
                       const displayName = item.selectedVariant 
-                        ? `${item.product.name} (${item.selectedVariant.size})`
+                        ? `${item.product.name} (${getVariantLabel(item.selectedVariant)})`
                         : item.product.name;
                       const displayPrice = item.selectedVariant
                         ? (item.selectedVariant.discountPrice || item.selectedVariant.price)
