@@ -189,82 +189,184 @@ export default async function AdminDashboard() {
       {/* ──────────── Main Content Grid ──────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        {/* ──── Recent Orders Panel ──── */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center text-sm text-white">📋</div>
-              <div>
-                <h2 className="text-sm sm:text-base font-black text-gray-900">Recent Orders</h2>
-                <p className="text-[10px] text-gray-400 font-medium">Latest customer transactions</p>
+        {/* ──── Left Column: Recent Orders & Stock Alerts ──── */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Recent Orders Panel */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center text-sm text-white">📋</div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-black text-gray-900">Recent Orders</h2>
+                  <p className="text-[10px] text-gray-400 font-medium">Latest customer transactions</p>
+                </div>
               </div>
+              <Link
+                href="/admin/orders"
+                className="text-[10px] text-gray-500 hover:text-gray-950 font-bold uppercase tracking-widest hover:underline transition"
+              >
+                View All →
+              </Link>
             </div>
-            <Link
-              href="/admin/orders"
-              className="text-[10px] text-gray-500 hover:text-gray-950 font-bold uppercase tracking-widest hover:underline transition"
-            >
-              View All →
-            </Link>
+
+            {recentOrders.length === 0 ? (
+              <div className="text-center py-16 space-y-3">
+                <span className="text-4xl">📭</span>
+                <p className="text-gray-400 text-xs font-medium">No orders placed yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-gray-50/80 text-gray-400 font-bold uppercase tracking-widest text-[9px]">
+                      <th className="p-4 pl-6">Customer</th>
+                      <th className="p-4">Payment</th>
+                      <th className="p-4">Amount</th>
+                      <th className="p-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {recentOrders.map((order) => {
+                      const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
+                        Pending: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
+                        Processing: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-400" },
+                        Shipped: { bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-400" },
+                        Delivered: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
+                        Cancelled: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-400" },
+                      };
+                      const sc = statusConfig[order.status] || statusConfig.Pending;
+                      return (
+                        <tr key={order._id.toString()} className="hover:bg-gray-50/80 transition-colors">
+                          <td className="p-4 pl-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-[10px] font-black text-gray-600 uppercase flex-shrink-0">
+                                {order.customer.name.charAt(0)}
+                              </div>
+                              <span className="font-bold text-gray-900 truncate max-w-[140px]">{order.customer.name}</span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className="inline-flex items-center gap-1.5 text-gray-500 font-medium">
+                              {order.paymentMethod === "COD" ? "💵" : "🏦"}
+                              <span className="text-[10px]">{order.paymentMethod === "COD" ? "Cash" : "Bank"}</span>
+                            </span>
+                          </td>
+                          <td className="p-4 font-black text-gray-900">
+                            LKR {order.totalAmount.toLocaleString()}
+                          </td>
+                          <td className="p-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide ${sc.bg} ${sc.text}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
+                              {order.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          {recentOrders.length === 0 ? (
-            <div className="text-center py-16 space-y-3">
-              <span className="text-4xl">📭</span>
-              <p className="text-gray-400 text-xs font-medium">No orders placed yet.</p>
+          {/* 🚨 Low Stock Alerts Table */}
+          <div id="low-stock-alerts" className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${
+            hasOutOfStock ? 'border-red-200' : 'border-gray-100'
+          }`}>
+            <div className="flex justify-between items-center p-6 pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm ${
+                  hasOutOfStock ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'
+                }`}>🚨</div>
+                <div>
+                  <h2 className="text-sm sm:text-base font-black text-gray-900">Low Stock Alerts</h2>
+                  <p className="text-[10px] text-gray-400 font-medium">Products requiring attention</p>
+                </div>
+              </div>
+              <Link
+                href="/admin/products"
+                className="text-[10px] text-gray-500 hover:text-gray-950 font-bold uppercase tracking-widest hover:underline transition"
+              >
+                Manage Inventory →
+              </Link>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-gray-50/80 text-gray-400 font-bold uppercase tracking-widest text-[9px]">
-                    <th className="p-4 pl-6">Customer</th>
-                    <th className="p-4">Payment</th>
-                    <th className="p-4">Amount</th>
-                    <th className="p-4">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {recentOrders.map((order) => {
-                    const statusConfig: Record<string, { bg: string; text: string; dot: string }> = {
-                      Pending: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
-                      Processing: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-400" },
-                      Shipped: { bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-400" },
-                      Delivered: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
-                      Cancelled: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-400" },
-                    };
-                    const sc = statusConfig[order.status] || statusConfig.Pending;
-                    return (
-                      <tr key={order._id.toString()} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="p-4 pl-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-[10px] font-black text-gray-600 uppercase flex-shrink-0">
-                              {order.customer.name.charAt(0)}
+
+            {lowStockProducts.length === 0 ? (
+              <div className="text-center py-16 space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mx-auto">✅</div>
+                <p className="text-gray-400 text-xs font-medium">All stock levels healthy!</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-gray-50/80 text-gray-400 font-bold uppercase tracking-widest text-[9px]">
+                      <th className="p-4 pl-6">Product</th>
+                      <th className="p-4">Category</th>
+                      <th className="p-4">Current Stock</th>
+                      <th className="p-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {lowStockProducts.map(prod => {
+                      const threshold = prod.lowStockAlert || 5;
+                      const hasVariants = prod.variants && prod.variants.length > 0;
+                      const alertItems: Array<{ label: string; stock: number; isOut: boolean }> = [];
+
+                      if (hasVariants) {
+                        prod.variants.forEach((v: { size?: string; color?: string; stock?: number }) => {
+                          const st = v.stock || 0;
+                          if (st <= threshold) {
+                            const parts = [v.size, v.color].filter(Boolean).join(' / ');
+                            alertItems.push({ label: parts || 'Default', stock: st, isOut: st <= 0 });
+                          }
+                        });
+                      } else {
+                        alertItems.push({ label: 'Standard', stock: prod.stock, isOut: prod.stock <= 0 });
+                      }
+                      
+                      if (alertItems.length === 0) return null;
+
+                      return (
+                        <tr key={prod._id.toString()} className="hover:bg-gray-50/80 transition-colors">
+                          <td className="p-4 pl-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded bg-gray-100 overflow-hidden relative border border-gray-200 shadow-sm flex-shrink-0">
+                                {prod.images && prod.images[0] && (
+                                  <Image src={prod.images[0]} alt="" fill unoptimized className="object-cover" />
+                                )}
+                              </div>
+                              <Link href={`/admin/products/${prod._id.toString()}/edit`} className="font-bold text-gray-900 truncate max-w-[200px] hover:underline">
+                                {prod.name}
+                              </Link>
                             </div>
-                            <span className="font-bold text-gray-900 truncate max-w-[140px]">{order.customer.name}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className="inline-flex items-center gap-1.5 text-gray-500 font-medium">
-                            {order.paymentMethod === "COD" ? "💵" : "🏦"}
-                            <span className="text-[10px]">{order.paymentMethod === "COD" ? "Cash" : "Bank"}</span>
-                          </span>
-                        </td>
-                        <td className="p-4 font-black text-gray-900">
-                          LKR {order.totalAmount.toLocaleString()}
-                        </td>
-                        <td className="p-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide ${sc.bg} ${sc.text}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />
-                            {order.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          </td>
+                          <td className="p-4 text-gray-500 font-medium">
+                            {hasVariants ? 'Variants' : 'Standard'}
+                          </td>
+                          <td className="p-4 font-black text-gray-900">
+                            {alertItems.map(a => a.stock).join(', ')}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-wrap gap-1.5">
+                              {alertItems.map((item, idx) => (
+                                <span key={idx} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wide ${
+                                  item.isOut ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                }`}>
+                                  {item.isOut ? 'OUT' : 'LOW'} {item.label !== 'Standard' && item.label !== 'Default' ? `(${item.label})` : ''}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ──── Right Column ──── */}
@@ -296,96 +398,6 @@ export default async function AdminDashboard() {
                   </span>
                 </Link>
               ))}
-            </div>
-          </div>
-
-          {/* 🚨 Low Stock Alerts Panel */}
-          <div id="low-stock-alerts" className={`rounded-2xl border shadow-sm overflow-hidden ${
-            hasOutOfStock ? 'border-red-200 bg-gradient-to-b from-red-50/60 to-white' : 'border-gray-100 bg-white'
-          }`}>
-            <div className="p-6 pb-4 border-b border-gray-100">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
-                    hasOutOfStock ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'
-                  }`}>🚨</div>
-                  <div>
-                    <h2 className="text-sm font-black text-gray-900">Stock Alerts</h2>
-                    {lowStockCount > 0 && (
-                      <p className="text-[10px] text-gray-400 font-medium">{lowStockCount} item{lowStockCount !== 1 ? 's' : ''} need attention</p>
-                    )}
-                  </div>
-                </div>
-                <Link href="/admin/products" className="text-[10px] text-gray-400 hover:text-gray-900 font-bold uppercase tracking-widest hover:underline transition">
-                  View All →
-                </Link>
-              </div>
-            </div>
-
-            <div className="p-5">
-              {lowStockProducts.length === 0 ? (
-                <div className="text-center py-8 space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mx-auto">✅</div>
-                  <p className="text-gray-400 text-xs font-medium">All stock levels healthy!</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {lowStockProducts.map(prod => {
-                    const threshold = prod.lowStockAlert || 5;
-                    const hasVariants = prod.variants && prod.variants.length > 0;
-
-                    const alertItems: Array<{ label: string; stock: number; isOut: boolean }> = [];
-
-                    if (hasVariants) {
-                      prod.variants.forEach((v: { size?: string; color?: string; stock?: number }) => {
-                        const st = v.stock || 0;
-                        if (st <= threshold) {
-                          const parts = [v.size, v.color].filter(Boolean).join(' / ');
-                          alertItems.push({ label: parts || 'Default', stock: st, isOut: st <= 0 });
-                        }
-                      });
-                    } else {
-                      alertItems.push({ label: 'Standard', stock: prod.stock, isOut: prod.stock <= 0 });
-                    }
-
-                    if (alertItems.length === 0) return null;
-
-                    return (
-                      <div key={prod._id.toString()} className="bg-gray-50/80 rounded-xl p-4 space-y-3 border border-gray-100 hover:border-gray-200 transition">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-white border border-gray-100 relative overflow-hidden flex-shrink-0 shadow-sm">
-                            {prod.images && prod.images[0] && (
-                              <Image src={prod.images[0]} alt="" fill unoptimized className="object-cover" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/admin/products/${prod._id.toString()}/edit`} className="text-xs font-bold text-gray-900 truncate block hover:underline">
-                              {prod.name}
-                            </Link>
-                            <p className="text-[9px] text-gray-400 font-medium">
-                              {hasVariants ? `${prod.variants.length} Variants` : 'Standard'} · Alert: ≤{threshold}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {alertItems.map((item, idx) => (
-                            <span
-                              key={idx}
-                              className={`inline-flex items-center gap-1 text-[8px] px-2 py-0.5 rounded-md font-extrabold uppercase tracking-wide ${
-                                item.isOut
-                                  ? 'bg-red-100 text-red-600 border border-red-200'
-                                  : 'bg-amber-100 text-amber-700 border border-amber-200'
-                              }`}
-                            >
-                              {item.isOut ? '🚨' : '⚠️'} {item.label}: {item.isOut ? 'OUT' : `${item.stock} left`}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
         </div>
