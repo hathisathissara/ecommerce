@@ -172,7 +172,7 @@ export default async function StoreHome() {
                   Flash Offers / hot Deals
                 </h2>
               </div>
-              <Link href="/products" className="text-xs font-bold text-gray-400 hover:text-black hover:underline transition">
+              <Link href="/products?filter=flash-deals" className="text-xs font-bold text-gray-400 hover:text-black hover:underline transition">
                 View All Deals
               </Link>
             </div>
@@ -195,7 +195,7 @@ export default async function StoreHome() {
                   Best Sellers
                 </h2>
               </div>
-              <Link href="/products" className="text-xs font-bold text-gray-400 hover:text-black hover:underline transition">
+              <Link href="/products?sort=best-selling" className="text-xs font-bold text-gray-400 hover:text-black hover:underline transition">
                 Browse Best Sellers
               </Link>
             </div>
@@ -214,7 +214,7 @@ export default async function StoreHome() {
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-gray-950 uppercase">
               New Arrivals ✨
             </h2>
-            <Link href="/products" className="text-xs font-bold text-gray-400 hover:text-black hover:underline transition">
+            <Link href="/products?sort=newest" className="text-xs font-bold text-gray-400 hover:text-black hover:underline transition">
               Browse All Products
             </Link>
           </div>

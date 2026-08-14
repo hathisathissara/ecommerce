@@ -46,10 +46,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const lowestPrice = getLowestPrice();
 
-  // Calculation of Discount % (Only for Base Product)
-  const discountPercent = product.discountPrice
-    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
-    : 0;
+  // Calculation of Discount % — works for both base products and variants
+  const discountPercent = (() => {
+    if (hasVariants) {
+      // Find the highest discount % among all variants that have a discountPrice
+      const percents = product.variants!
+        .filter((v) => v.discountPrice && v.discountPrice > 0 && v.price > 0)
+        .map((v) => Math.round(((v.price - v.discountPrice!) / v.price) * 100));
+      return percents.length > 0 ? Math.max(...percents) : 0;
+    }
+    return product.discountPrice
+      ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+      : 0;
+  })();
 
   // Smart Add to Cart Click Handler
   const handleCartClick = (e: React.MouseEvent) => {
@@ -95,9 +104,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
 
         {/* Discount Badge */}
-        {!hasVariants && discountPercent > 0 && (
-          <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full tracking-wide">
-            -{discountPercent}%
+        {discountPercent > 0 && (
+          <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-full tracking-wide shadow-sm">
+            -{discountPercent}% OFF
           </span>
         )}
 
@@ -118,18 +127,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Info */}
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-grow p-3.5 justify-between">
         <div>
-          {/* Category and Variants Indicator Badge */}
-          <div className="flex items-center justify-between mb-1 gap-1 flex-wrap">
+          {/* Category */}
+          <div className="flex items-center mb-1">
             <p className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
               {product.category?.name || "Cosmetic"}
             </p>
-            
-            {/* ⚡ Newly added: Banner showing that customer has multiple sizes ⚡ */}
-            {hasVariants && (
-              <span className="text-[9px] bg-pink-50 text-pink-700 font-extrabold px-2 py-0.5 rounded-full">
-                ✨ {product.variants!.length} Options Available
-              </span>
-            )}
           </div>
 
           <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-gray-700 transition">
@@ -141,12 +143,27 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-center justify-between gap-2 mt-4 pt-2 border-t border-gray-50">
           <div className="flex flex-col">
             {hasVariants ? (
-              // Variants show "From LKR Lowest_Price" if available
-              <span className="text-xs font-semibold text-gray-400">
-                From <span className="text-sm font-black text-gray-900 block">LKR {lowestPrice.toLocaleString()}</span>
-              </span>
+              // Variants: show lowest price + small size pills
+              <div className="flex flex-col gap-1">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[9px] text-gray-400 font-medium">From</span>
+                  <span className="text-sm font-black text-gray-900">LKR {lowestPrice.toLocaleString()}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {product.variants!.slice(0, 3).map((v, i) => (
+                    <span key={i} className="text-[9px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                      {v.size}
+                    </span>
+                  ))}
+                  {product.variants!.length > 3 && (
+                    <span className="text-[9px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                      +{product.variants!.length - 3}
+                    </span>
+                  )}
+                </div>
+              </div>
             ) : (
-              // Variants or normal price is shown
+              // Normal price with optional strikethrough
               <div className="flex items-baseline gap-1.5">
                 <span className="text-sm font-black text-gray-900">LKR {lowestPrice.toLocaleString()}</span>
                 {product.discountPrice && (

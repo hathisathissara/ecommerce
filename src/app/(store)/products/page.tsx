@@ -14,10 +14,10 @@ export const revalidate = 10;
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; brand?: string; search?: string }>;
+  searchParams: Promise<{ category?: string; brand?: string; search?: string; filter?: string; sort?: string }>;
 }): Promise<Metadata> {
   await connectDB();
-  const { category, brand, search } = await searchParams;
+  const { category, brand, search, filter, sort } = await searchParams;
   const settings = await Setting.findOne();
   const siteTitle = settings?.storeName || "The Store";
 
@@ -25,7 +25,16 @@ export async function generateMetadata({
   let description = "Browse our full collection of luxury perfumes, cosmetics, and more.";
   let ogImage = settings?.logo || "/og-image.png";
 
-  if (category) {
+  if (filter === "flash-deals") {
+    title = `⚡ Flash Deals & Hot Offers | ${siteTitle}`;
+    description = `Grab the best discounts on luxury perfumes and cosmetics at ${siteTitle}.`;
+  } else if (sort === "best-selling") {
+    title = `🏆 Best Sellers | ${siteTitle}`;
+    description = `Shop our most popular products at ${siteTitle}.`;
+  } else if (sort === "newest") {
+    title = `✨ New Arrivals | ${siteTitle}`;
+    description = `Discover the latest additions at ${siteTitle}.`;
+  } else if (category) {
     const foundCategory = await Category.findOne({ slug: category });
     if (foundCategory) {
       title = `${foundCategory.name} | ${siteTitle}`;
@@ -70,21 +79,29 @@ export default async function ProductsPage({
     sort?: string; 
     giftsByPrice?: string; 
     giftIdeas?: string;
-    brand?: string; // Add brand parameter to searchParams
+    brand?: string;
+    filter?: string; // flash-deals, etc.
   }>;
 }) {
   await connectDB();
-  const { category, search, availability, sort, giftsByPrice, giftIdeas, brand } = await searchParams;
+  const { category, search, availability, sort, giftsByPrice, giftIdeas, brand, filter } = await searchParams;
 
   const query: {
     category?: string;
-    brand?: string; // Declare brand inside query type
+    brand?: string;
+    discountPrice?: { $gt: number }; // for flash deals filter
     $or?: Array<{ name?: { $regex: string; $options: string }; description?: { $regex: string; $options: string } }>;
     stockStatus?: string;
     price?: { $lt?: number; $gte?: number; $lte?: number; $gt?: number };
     tags?: { $in: string[] };
   } = {};
   let activeCategoryName = "All Products";
+
+  // Filter by flash deals (discounted products)
+  if (filter === "flash-deals") {
+    query.discountPrice = { $gt: 0 };
+    activeCategoryName = "⚡ Flash Deals / Hot Offers";
+  }
 
   // Filter products by selected Category slug
   if (category) {
@@ -143,6 +160,12 @@ export default async function ProductsPage({
 
   // Sort logic configuration
   let sortQuery: Record<string, 1 | -1> = { createdAt: -1 };
+
+  // If filter=flash-deals and no explicit sort, default sort by discount price desc
+  if (filter === "flash-deals" && !sort) {
+    sortQuery = { discountPrice: -1 };
+  }
+
   switch (sort) {
     case "best-selling":
       // Now dynamically sorts by the actual sales count tracked on checkout!
@@ -179,7 +202,15 @@ export default async function ProductsPage({
   const serializedCategories = JSON.parse(JSON.stringify(categories));
   const serializedProducts = JSON.parse(JSON.stringify(products));
 
-  const pageTitle = search ? `Search results` : activeCategoryName;
+  const pageTitle = search
+    ? `Search results`
+    : filter === "flash-deals"
+    ? "⚡ Flash Deals / Hot Offers"
+    : sort === "best-selling"
+    ? "🏆 Best Sellers"
+    : sort === "newest"
+    ? "✨ New Arrivals"
+    : activeCategoryName;
 
   return (
     <div className="bg-white min-h-screen">
@@ -189,11 +220,11 @@ export default async function ProductsPage({
           <nav className="flex items-center gap-2 text-xs text-gray-400 mb-2">
             <Link href="/" className="hover:text-gray-700 transition">Home</Link>
             <span>›</span>
-            <span className="text-gray-700 font-medium">Shop</span>
-            {activeCategoryName !== "All Products" && (
+            <Link href="/products" className="hover:text-gray-700 transition">Shop</Link>
+            {pageTitle !== "All Products" && (
               <>
                 <span>›</span>
-                <span className="text-gray-700 font-medium">{activeCategoryName}</span>
+                <span className="text-gray-700 font-medium">{pageTitle}</span>
               </>
             )}
           </nav>
