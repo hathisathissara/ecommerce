@@ -8,6 +8,7 @@ import Brand from "@/models/Brand"; // Import Brand model
 import ProductCard from "@/components/ProductCard";
 import HeroSlider from "@/components/HeroSlider";
 import NewsletterBox from "@/components/NewsletterBox";
+import DragScroll from "@/components/DragScroll";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -99,7 +100,7 @@ export default async function StoreHome() {
             Shop by Category 📂
           </h2>
           
-          <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] snap-x">
+          <DragScroll>
             {categories.map((cat) => (
               <Link
                 href={`/products?category=${cat.slug}`}
@@ -122,7 +123,7 @@ export default async function StoreHome() {
                 </span>
               </Link>
             ))}
-          </div>
+          </DragScroll>
         </section>
 
         {/* ⚡ FEATURED BRANDS HORIZONTAL SCROLL ROW ⚡ */}
@@ -133,7 +134,7 @@ export default async function StoreHome() {
             </h2>
             
             {/* Horizontal scrollable brands container */}
-            <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] snap-x">
+            <DragScroll>
               {serializedBrands.map((brand: { _id: string; slug: string; name: string; image: string }) => (
                 <Link
                   href={`/products?brand=${brand.slug}`}
@@ -158,7 +159,7 @@ export default async function StoreHome() {
                   </span>
                 </Link>
               ))}
-            </div>
+            </DragScroll>
           </section>
         )}
 
