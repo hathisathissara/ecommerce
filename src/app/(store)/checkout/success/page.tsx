@@ -7,13 +7,44 @@ import { Suspense, useEffect, useState } from "react";
 
 interface OrderType {
   _id: string;
+  orderNumber?: string;
+  invoiceNumber?: string;
   customer: { name: string; email: string; phone: string; address: string };
-  items: Array<{ _id: string; name: string; price: number; quantity: number; image: string; description?: string }>;
+  items: Array<{
+    _id: string;
+    name: string;
+    quantity: number;
+    image: string;
+    description?: string;
+    sku?: string;
+    size?: string;
+    color?: string;
+    originalPrice: number;
+    productDiscount: number;
+    finalPrice: number;
+    total: number;
+    
+    // Legacy fields
+    price: number;
+    discountPrice?: number;
+  }>;
+  subtotal?: number;
+  totalProductDiscount?: number;
+  coupon?: {
+    code?: string;
+    discountType?: string;
+    discountValue?: number;
+    discountAmount?: number;
+  };
+  couponDiscount?: number;
+  shippingFee: number;
+  tax?: number;
+  grandTotal?: number;
   totalAmount: number;
   couponCode?: string;
   discountAmount?: number;
-  shippingFee: number;
   paymentMethod: string;
+  paymentStatus?: string;
   createdAt: string;
 }
 
@@ -46,14 +77,36 @@ function SuccessContent() {
     fetchOrder();
   }, [orderId]);
 
-  const subtotal = order?.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+  const orderNumber = order?.orderNumber || (order ? `#${order._id.substring(18)}` : "");
+  const invoiceNumber = order?.invoiceNumber || (order ? `INV-${order._id.substring(18)}` : "");
+
+  const subtotal = order
+    ? (typeof order.subtotal === "number"
+      ? order.subtotal
+      : order.items.reduce((sum, item) => sum + ((item.originalPrice || item.price) * item.quantity), 0))
+    : 0;
+
+  const totalProductDiscount = order
+    ? (typeof order.totalProductDiscount === "number"
+      ? order.totalProductDiscount
+      : order.items.reduce((sum, item) => sum + ((item.productDiscount || (item.discountPrice ? (item.price - item.discountPrice) : 0)) * item.quantity), 0))
+    : 0;
+
+  const couponDiscount = order
+    ? (typeof order.couponDiscount === "number"
+      ? order.couponDiscount
+      : (order.discountAmount || 0))
+    : 0;
+
   const shippingFee = order?.shippingFee || 0;
-  const totalAmount = order?.totalAmount || 0;
-  
-  let discountAmount = order?.discountAmount || 0;
-  if (discountAmount === 0 && subtotal + shippingFee > totalAmount) {
-    discountAmount = subtotal + shippingFee - totalAmount;
-  }
+  const tax = order?.tax || 0;
+  const grandTotal = order
+    ? (typeof order.grandTotal === "number"
+      ? order.grandTotal
+      : order.totalAmount)
+    : 0;
+
+  const displayCouponCode = order?.coupon?.code || order?.couponCode || "";
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 print:bg-white print:p-0">
@@ -106,7 +159,8 @@ function SuccessContent() {
             </div>
             <div className="text-right">
               <h2 className="text-xl font-bold uppercase">ORDER RECEIPT</h2>
-              <p className="text-xs text-gray-400 mt-1">Order ID: <span className="font-mono">{order._id}</span></p>
+              <p className="text-xs text-gray-400 mt-1">Invoice No: <span className="font-mono">{invoiceNumber}</span></p>
+              <p className="text-xs text-gray-400">Order No: <span className="font-mono">{orderNumber}</span></p>
               <p className="text-xs text-gray-400">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
@@ -115,12 +169,13 @@ function SuccessContent() {
             <div>
               <h3 className="font-bold uppercase text-xs text-gray-400 mb-2">Billed To:</h3>
               <p className="font-bold text-gray-900">{order.customer.name}</p>
+              <p className="text-gray-600 mt-0.5">Phone: {order.customer.phone || "N/A"}</p>
               <p className="text-gray-600 leading-relaxed mt-1">{order.customer.address}</p>
             </div>
             <div>
               <h3 className="font-bold uppercase text-xs text-gray-400 mb-2">Payment Details:</h3>
               <p>• Method: <strong>{order.paymentMethod === "COD" ? "Cash on Delivery (COD)" : "Bank Transfer"}</strong></p>
-              <p>• Contact Phone: {order.customer.phone}</p>
+              <p>• Status: <strong>{order.paymentStatus || (order.paymentMethod === "COD" ? "Pending (Pay on Delivery)" : "Paid")}</strong></p>
             </div>
           </div>
 
@@ -130,35 +185,36 @@ function SuccessContent() {
                 <th className="p-3">Item Description</th>
                 <th className="p-3 text-center">Qty</th>
                 <th className="p-3 text-right">Unit Price</th>
+                <th className="p-3 text-right">Discount</th>
                 <th className="p-3 text-right">Total</th>
               </tr>
             </thead>
             <tbody>
-              {order.items.map((item) => (
-                <tr key={item._id} className="border-b">
-                  <td className="p-3">
-                    <p className="font-bold text-gray-900">{item.name}</p>
-                    {item.description && <p className="text-[10px] text-gray-400 whitespace-pre-line mt-1">{item.description}</p>}
-                  </td>
-                  <td className="p-3 text-center font-bold">{item.quantity}</td>
-                  <td className="p-3 text-right">
-                    <div>LKR {item.price.toLocaleString()}</div>
-                    {discountAmount > 0 && (
-                      <div className="text-[10px] text-gray-500 mt-0.5">
-                        Discounted: LKR {(item.price - (item.price / subtotal) * discountAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-3 text-right font-bold">
-                    <div>LKR {(item.price * item.quantity).toLocaleString()}</div>
-                    {discountAmount > 0 && (
-                      <div className="text-[10px] text-red-500 mt-0.5 font-normal">
-                        - LKR {((item.price * item.quantity / subtotal) * discountAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {order.items.map((item) => {
+                const itemOriginalPrice = typeof item.originalPrice === "number" ? item.originalPrice : item.price;
+                const itemProductDiscount = typeof item.productDiscount === "number" ? item.productDiscount : (item.discountPrice ? (item.price - item.discountPrice) : 0);
+                const itemFinalPrice = typeof item.finalPrice === "number" ? item.finalPrice : (item.discountPrice || item.price);
+                const itemTotal = typeof item.total === "number" ? item.total : (itemFinalPrice * item.quantity);
+
+                return (
+                  <tr key={item._id} className="border-b">
+                    <td className="p-3">
+                      <p className="font-bold text-gray-900">{item.name}</p>
+                      {item.sku && <p className="text-[10px] text-gray-400">SKU: {item.sku}</p>}
+                      {(item.size || item.color) && (
+                        <p className="text-[10px] text-gray-400">
+                          {[item.size, item.color].filter(Boolean).join(" / ")}
+                        </p>
+                      )}
+                      {item.description && <p className="text-[10px] text-gray-400 whitespace-pre-line mt-1">{item.description}</p>}
+                    </td>
+                    <td className="p-3 text-center font-bold">{item.quantity}</td>
+                    <td className="p-3 text-right">LKR {itemOriginalPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                    <td className="p-3 text-right text-red-600">{itemProductDiscount > 0 ? `-LKR ${itemProductDiscount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : "-"}</td>
+                    <td className="p-3 text-right font-bold">LKR {itemTotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -166,21 +222,33 @@ function SuccessContent() {
             <div className="w-1/3 text-xs space-y-1.5 text-gray-600 text-right">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span>LKR {(order.totalAmount + (order.discountAmount || 0) - (order.shippingFee || 0)).toLocaleString()}</span>
+                <span>LKR {subtotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
-              {order.discountAmount ? order.discountAmount > 0 && (
+              {totalProductDiscount > 0 && (
                 <div className="flex justify-between text-red-600 font-semibold">
-                  <span>Discount ({order.couponCode}):</span>
-                  <span>- LKR {order.discountAmount}</span>
+                  <span>Product Discount:</span>
+                  <span>-LKR {totalProductDiscount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                 </div>
-              ) : null}
+              )}
+              {couponDiscount > 0 && (
+                <div className="flex justify-between text-red-600 font-semibold">
+                  <span>Coupon Discount {displayCouponCode ? `(${displayCouponCode})` : ""}:</span>
+                  <span>-LKR {couponDiscount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Shipping:</span>
-                <span>{(!order.shippingFee || order.shippingFee === 0) ? "FREE" : `LKR ${order.shippingFee}`}</span>
+                <span>{shippingFee === 0 ? "FREE" : `LKR ${shippingFee.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}</span>
               </div>
+              {tax > 0 && (
+                <div className="flex justify-between">
+                  <span>Tax:</span>
+                  <span>LKR {tax.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm font-black text-gray-900 border-t pt-2">
                 <span>Grand Total:</span>
-                <span>LKR {order.totalAmount.toLocaleString()}</span>
+                <span>LKR {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>

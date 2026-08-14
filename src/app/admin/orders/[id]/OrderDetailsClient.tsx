@@ -8,7 +8,7 @@ import Image from "next/image";
 interface OrderType {
   _id: string;
   customer: { name: string; email: string; phone: string; address: string };
-  items: Array<{ _id: string; name: string; price: number; quantity: number; image: string; description?: string }>;
+  items: Array<{ _id: string; name: string; price: number; discountPrice?: number; quantity: number; image: string; description?: string }>;
   totalAmount: number;
   couponCode?: string;
   discountAmount?: number;
@@ -50,7 +50,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
     }
   };
 
-  const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = order.items.reduce((sum, item) => sum + ((item.discountPrice || item.price) * item.quantity), 0);
   const shippingFee = order.shippingFee || 0;
   const totalAmount = order.totalAmount || 0;
   
@@ -144,12 +144,17 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
                     <Image src={item.image} alt="" width={56} height={56} className="w-14 h-14 object-cover rounded-xl border flex-shrink-0" />
                     <div className="flex-grow min-w-0">
                       <p className="font-bold text-sm text-gray-900 truncate">{item.name}</p>
-                      <p className="text-xs text-gray-400 mt-1">Qty: {item.quantity} | LKR {item.price.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Qty: {item.quantity} | LKR {item.discountPrice ? item.discountPrice.toLocaleString() : item.price.toLocaleString()}
+                        {item.discountPrice && (
+                          <span className="line-through ml-2 text-gray-300">LKR {item.price.toLocaleString()}</span>
+                        )}
+                      </p>
                       {item.description && (
                         <p className="text-[10px] bg-pink-50 text-pink-700 p-2 rounded-xl mt-2 whitespace-pre-line leading-relaxed">{item.description}</p>
                       )}
                     </div>
-                    <span className="font-extrabold text-sm text-gray-900 flex-shrink-0">LKR {(item.price * item.quantity).toLocaleString()}</span>
+                    <span className="font-extrabold text-sm text-gray-900 flex-shrink-0">LKR {((item.discountPrice || item.price) * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -197,21 +202,21 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
               <div className="space-y-2 text-xs text-gray-600">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>LKR {subtotal.toLocaleString()}</span>
+                  <span>LKR {subtotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                 </div>
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-red-600 font-semibold">
                     <span>Discount ({order.couponCode})</span>
-                    <span>- LKR {discountAmount.toLocaleString()}</span>
+                    <span>- LKR {discountAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Delivery Cost</span>
-                  <span>{shippingFee === 0 ? "FREE" : `LKR ${shippingFee}`}</span>
+                  <span>{shippingFee === 0 ? "FREE" : `LKR ${shippingFee.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}</span>
                 </div>
                 <div className="flex justify-between items-center text-base font-extrabold text-gray-900 border-t pt-3">
                   <span>Total Paid</span>
-                  <span className="text-pink-600">LKR {totalAmount.toLocaleString()}</span>
+                  <span className="text-pink-600">LKR {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
@@ -248,7 +253,7 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
           <div>
             <h3 className="font-bold uppercase text-xs text-gray-400 mb-2">Payment Details:</h3>
             <p>• Method: <strong>{order.paymentMethod === "COD" ? "Cash on Delivery (COD)" : "Bank Transfer"}</strong></p>
-            <p>• Contact Phone: {order.customer.phone}</p>
+            <p>• Contact Phone: {order.customer.phone || "N/A"}</p>
           </div>
         </div>
 
@@ -271,20 +276,17 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
                 </td>
                 <td className="p-3 text-center font-bold">{item.quantity}</td>
                 <td className="p-3 text-right">
-                  <div>LKR {item.price.toLocaleString()}</div>
-                  {discountAmount > 0 && (
-                    <div className="text-[10px] text-gray-500 mt-0.5">
-                      Discounted: LKR {(item.price - (item.price / subtotal) * discountAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                    </div>
+                  {item.discountPrice ? (
+                    <>
+                      <div>LKR {item.discountPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
+                      <div className="text-[10px] text-gray-500 line-through mt-0.5">LKR {item.price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
+                    </>
+                  ) : (
+                    <div>LKR {item.price.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
                   )}
                 </td>
                 <td className="p-3 text-right font-bold">
-                  <div>LKR {(item.price * item.quantity).toLocaleString()}</div>
-                  {discountAmount > 0 && (
-                    <div className="text-[10px] text-red-500 mt-0.5 font-normal">
-                      - LKR {((item.price * item.quantity / subtotal) * discountAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                    </div>
-                  )}
+                  <div>LKR {((item.discountPrice || item.price) * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
                 </td>
               </tr>
             ))}
@@ -296,21 +298,21 @@ export default function OrderDetailsClient({ order, settings }: OrderDetailsClie
           <div className="w-1/3 text-xs space-y-1.5 text-gray-600 text-right">
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span>LKR {subtotal.toLocaleString()}</span>
+              <span>LKR {subtotal.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between text-red-600 font-semibold">
                 <span>Discount ({order.couponCode}):</span>
-                <span>- LKR {discountAmount.toLocaleString()}</span>
+                <span>- LKR {discountAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
             )}
             <div className="flex justify-between">
               <span>Shipping:</span>
-              <span>{shippingFee === 0 ? "FREE" : `LKR ${shippingFee.toLocaleString()}`}</span>
+              <span>{shippingFee === 0 ? "FREE" : `LKR ${shippingFee.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}</span>
             </div>
             <div className="flex justify-between text-sm font-black text-gray-900 border-t pt-2">
               <span>Grand Total:</span>
-              <span>LKR {totalAmount.toLocaleString()}</span>
+              <span>LKR {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>

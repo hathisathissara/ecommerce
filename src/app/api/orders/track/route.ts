@@ -17,9 +17,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid Order ID format" }, { status: 400 });
     }
 
-    // Retrieving data (retrieving only name, items and status except addresses for security)
+    // Retrieving all fields needed for the invoice receipt on the success page
     const order = await Order.findById(orderId).select(
-      "customer.name status totalAmount createdAt items"
+      "customer status items paymentMethod paymentStatus orderNumber invoiceNumber " +
+      "subtotal totalProductDiscount coupon couponDiscount shippingFee tax grandTotal " +
+      "totalAmount couponCode discountAmount createdAt"
     );
 
     if (!order) {

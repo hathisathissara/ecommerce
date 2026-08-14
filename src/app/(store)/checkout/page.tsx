@@ -103,13 +103,16 @@ export default function CheckoutPage() {
     setCouponError("");
   };
 
+  const originalSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalProductDiscount = cartItems.reduce((sum, item) => sum + (item.discountPrice ? (item.price - item.discountPrice) * item.quantity : 0), 0);
+
   const deliveryCharge = dbSettings
     ? cartTotal >= dbSettings.freeDeliveryThreshold
       ? 0
       : dbSettings.deliveryCharge
     : 350;
 
-  const finalTotal = cartTotal + deliveryCharge - discountAmount;
+  const finalTotal = originalSubtotal - totalProductDiscount - discountAmount + deliveryCharge;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,7 +246,16 @@ export default function CheckoutPage() {
                   <p className="font-semibold">{item.name}</p>
                   <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
                 </div>
-                <span className="font-bold">LKR {((item.discountPrice || item.price) * item.quantity).toFixed(2)}</span>
+                <div className="text-right">
+                  {item.discountPrice ? (
+                    <>
+                      <div className="font-bold">LKR {(item.discountPrice * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                      <div className="text-[10px] text-gray-400 line-through">LKR {(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                    </>
+                  ) : (
+                    <span className="font-bold">LKR {(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -282,11 +294,17 @@ export default function CheckoutPage() {
           <div className="border-t pt-4 space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>LKR {cartTotal.toFixed(2)}</span>
+              <span>LKR {originalSubtotal.toFixed(2)}</span>
             </div>
+            {totalProductDiscount > 0 && (
+              <div className="flex justify-between text-red-600 font-semibold">
+                <span>Product Discount</span>
+                <span>- LKR {totalProductDiscount.toFixed(2)}</span>
+              </div>
+            )}
             {discountAmount > 0 && (
-              <div className="flex justify-between text-red-600">
-                <span>Discount ({appliedCoupon})</span>
+              <div className="flex justify-between text-red-600 font-semibold">
+                <span>Coupon Discount ({appliedCoupon})</span>
                 <span>- LKR {discountAmount.toFixed(2)}</span>
               </div>
             )}
@@ -304,9 +322,9 @@ export default function CheckoutPage() {
                 💡 Add <span className="font-bold">LKR {(dbSettings.freeDeliveryThreshold - cartTotal).toFixed(2)}</span> more to get <span className="text-green-600 font-bold">FREE SHIPPING!</span>
               </div>
             )}
-
+ 
             <div className="flex justify-between items-center text-lg font-extrabold text-gray-900 border-t pt-2 mb-4">
-              <span>Total Amount</span>
+              <span>Grand Total</span>
               <span>LKR {finalTotal.toFixed(2)}</span>
             </div>
           </div>
