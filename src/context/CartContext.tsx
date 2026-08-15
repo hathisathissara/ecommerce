@@ -1,7 +1,7 @@
 // src/context/CartContext.tsx
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 
 interface CartItem {
   _id: string;
@@ -26,24 +26,55 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false); // Default: Closed
+function loadCartFromStorage(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const saved = localStorage.getItem("cart");
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    localStorage.removeItem("cart");
+    return [];
+  }
+}
 
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [cartItems, setCartItems] = useState<CartItem[]>(loadCartFromStorage);
+  const [isCartOpen, setIsCartOpen] = useState(false); // Default: Closed
+  const isLoaded = useRef(false);
+
+  // Mark as loaded after first render so the save effect can start working
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
-    }
+    isLoaded.current = true;
   }, []);
 
+  // Save cart to localStorage (only after initial load is complete)
   useEffect(() => {
+    if (!isLoaded.current) return;
     if (cartItems.length > 0) {
       localStorage.setItem("cart", JSON.stringify(cartItems));
     } else {
       localStorage.removeItem("cart");
     }
   }, [cartItems]);
+
+  // Sync cart across browser tabs via the storage event
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "cart") {
+        if (e.newValue) {
+          try {
+            setCartItems(JSON.parse(e.newValue));
+          } catch {
+            // ignore malformed data
+          }
+        } else {
+          setCartItems([]);
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const addToCart = (item: Omit<CartItem, "quantity">, quantity = 1) => {
     setCartItems((prevItems) => {
