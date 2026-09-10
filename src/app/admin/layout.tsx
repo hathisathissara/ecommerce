@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 export default function AdminLayout({
@@ -11,7 +11,6 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Exclude sidebar and header for the Login Page
@@ -22,7 +21,7 @@ export default function AdminLayout({
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/logout", { method: "POST" });
-      router.push("/admin/login");
+      window.location.href = "/";
     } catch (err) {
       console.error("Logout failed", err);
     }

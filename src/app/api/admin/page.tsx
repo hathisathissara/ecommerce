@@ -1,13 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 export default function AdminDashboard() {
-  const router = useRouter();
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login"); // When you log out, you will go back to the login page
+    window.location.href = "/";
   };
 
   return (

@@ -106,6 +106,9 @@ EMAIL_PASS="[APP PASSWORD]"
 
 # App URL (used for internal API calls)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# Admin Secret Key (Protects admin portal from bots; acts as hidden key)
+ADMIN_SECRET_KEY=your_secret_admin_key_here
 ```
 
 ### 4. Seed the Admin User
@@ -127,8 +130,13 @@ This will create the default admin account:
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the storefront.  
-Open [http://localhost:3000/admin/login](http://localhost:3000/admin/login) to access the admin panel.
+- **Storefront:** [http://localhost:3000](http://localhost:3000)
+- **Admin Portal:** Accessing `/admin` or `/admin/login` directly will return **404 Not Found** (anti-bot stealth protection).  
+  To unlock and access the login portal, visit:  
+  `http://localhost:3000/admin/login?key=your_secret_admin_key_here`  
+  *(Replace with your `ADMIN_SECRET_KEY` from `.env.local`)*
+- **Sitemap:** [http://localhost:3000/sitemap.xml](http://localhost:3000/sitemap.xml)
+- **Robots.txt:** [http://localhost:3000/robots.txt](http://localhost:3000/robots.txt)
 
 ---
 
@@ -162,20 +170,24 @@ ecommerce/
 │   │   │   ├── contact/        # Inquiry inbox
 │   │   │   ├── newsletter/     # Subscriber list
 │   │   │   └── settings/       # Site settings
-│   │   └── api/                # API routes (Next.js Route Handlers)
-│   │       ├── admin/          # Admin CRUD endpoints
-│   │       ├── checkout/       # Order placement
-│   │       ├── coupons/        # Coupon validation
-│   │       ├── contact/        # Contact form submission
-│   │       ├── newsletter/     # Newsletter subscription
-│   │       ├── orders/         # Order tracking
-│   │       ├── reviews/        # Review submission
-│   │       └── settings/       # Public settings endpoint
+│   │   ├── api/                # API routes (Next.js Route Handlers)
+│   │   │   ├── admin/          # Admin CRUD endpoints
+│   │   │   ├── checkout/       # Order placement
+│   │   │   ├── coupons/        # Coupon validation
+│   │   │   ├── contact/        # Contact form submission
+│   │   │   ├── newsletter/     # Newsletter subscription
+│   │   │   ├── orders/         # Order tracking
+│   │   │   ├── reviews/        # Review submission
+│   │   │   └── settings/       # Public settings endpoint
+│   │   ├── layout.tsx          # Root layout & SEO metadata
+│   │   ├── not-found.tsx       # Custom 404 page
+│   │   ├── robots.ts           # Dynamic robots.txt generation
+│   │   └── sitemap.ts          # Dynamic sitemap.xml generation
 │   ├── components/             # Shared UI components
 │   ├── context/                # React Context (Cart, Wishlist)
-│   ├── lib/                    # Utilities (DB connection, helpers)
+│   ├── lib/                    # Utilities (DB connection, rate limiter, email)
 │   ├── models/                 # Mongoose data models
-│   └── middleware.ts           # Auth middleware (admin route protection)
+│   └── middleware.ts           # Route protection & stealth 404 middleware
 ├── .env.local                  # Environment variables (not committed)
 ├── next.config.ts
 ├── tailwind.config.ts
@@ -195,9 +207,37 @@ npm run lint      # Run ESLint
 
 ---
 
-## 🔒 Admin Authentication
+## 🔒 Admin Authentication & Security
 
-The admin panel is protected by a **JWT-based middleware** (`src/middleware.ts`). All `/admin/*` routes (except `/admin/login`) require a valid token stored as an HTTP-only cookie. Tokens are issued on login and expire after 24 hours.
+1. **Stealth 404 Protection (Hidden Door):**
+   - Accessing `/admin` or `/admin/login` directly returns a fake **404 Not Found** response.
+   - Authorized administrators access the portal using their secret query key:  
+     `/admin/login?key=<ADMIN_SECRET_KEY>`
+   - Once validated, a secure `admin_access_pass` cookie is granted and the URL is immediately cleaned.
+
+2. **JWT-based Session:**
+   - All `/admin/*` operations require a valid JWT token (`admin_token` cookie) expiring in 24 hours.
+
+3. **Brute-Force Rate Limiting:**
+   - The `/api/admin/login` endpoint restricts failed attempts to a maximum of **5 per IP address per 15 minutes**.
+   - Repeated failures trigger a temporary lockout (HTTP 429).
+
+4. **Secure Logout:**
+   - Logging out invalidates and clears both `admin_token` and `admin_access_pass`, locking the admin portal once again.
+
+---
+
+## 🔍 SEO & Search Engine Optimization
+
+1. **Dynamic `sitemap.xml` (`src/app/sitemap.ts`):**
+   - Automatically crawls and serves all static pages (Home, Shop, Contact, Policies).
+   - Dynamically fetches all live products (`/products/[slug]`), categories, and brands from MongoDB with their `lastModified` dates.
+   - Built-in ISR caching with `revalidate = 3600` (1 hour) for high performance and up-to-date indexing.
+
+2. **Dynamic `robots.txt` (`src/app/robots.ts`):**
+   - Configures crawlers (Googlebot, Bingbot, etc.) to index public store pages.
+   - Disallows sensitive endpoints (`/admin/`, `/api/`, `/cart`, `/checkout`, `/track-order`).
+   - Declares the sitemap URL automatically.
 
 ---
 
